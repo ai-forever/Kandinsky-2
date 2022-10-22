@@ -25,5 +25,5 @@ model = Natalle('inference.yaml', 'natalle_inpainting.pt', 'cuda', task_type='in
 init_image = Image.open('image.jpg')
 mask = np.ones((512, 512), dtype=np.float32)
 mask[100:] =  0
-images = model.generate_inpainting('мужчина держит плакат с надписью sber ai', init_image, mask, guidance_scale=7, num_steps=50)
+images = model.generate_inpainting('a red car', init_image, mask, guidance_scale=7, num_steps=50)
 ```
