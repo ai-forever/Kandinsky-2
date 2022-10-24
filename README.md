@@ -1,4 +1,7 @@
 # NATALL-E
+### inpainting
+https://drive.google.com/file/d/1dCmCmI3jJC_LM9oFgJcn4JUoAfS2s-6D/view?usp=sharing
+
 ## 1. text2img
 ```python
 from natalle.natalle_model import Natalle
