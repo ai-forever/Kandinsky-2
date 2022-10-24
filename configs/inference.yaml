@@ -13,7 +13,6 @@ model_config:
   resblock_updown: true
   use_fp16: false
   cache_text_emb: false
-  text_enc_name: google/mt5-small
   text_encoder_in_dim1: 1024
   text_encoder_in_dim2: 640
   pooling_type: from_model
@@ -56,9 +55,14 @@ image_enc_params:
       attn_resolutions: [ ]
       dropout: 0.0
 
-text_enc_params:
+text_enc_params1:
   model_path: M-CLIP/XLM-Roberta-Large-Vit-B-16Plus
   model_name: multiclip
+
+text_enc_params2:
+  model_path: google/mt5-small
+  model_name: MT5EncoderModel
+
 
 tokenizer_name1: M-CLIP/XLM-Roberta-Large-Vit-B-16Plus
 tokenizer_name2: google/mt5-small

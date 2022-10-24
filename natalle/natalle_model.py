@@ -6,12 +6,13 @@ import torch
 from omegaconf import OmegaConf
 import clip
 import math
-from imagen_pytorch.text_encoders import TextEncoder
-from imagen_pytorch.vqgan.autoencoder import VQModelInterface, AutoencoderKL
+from .text_encoders import TextEncoder
+from .vqgan.autoencoder import VQModelInterface, AutoencoderKL
 from copy import deepcopy
 import torch.nn.functional as F
 
 from .utils import prepare_image, q_sample, process_images
+
 
 class Natalle:
     def __init__(self, config_path, model_path, device, task_type='text2img', vae_path=None):
@@ -25,11 +26,11 @@ class Natalle:
             self.config['model_config']['up'] = False
             self.config['model_config']['inpainting'] = True
         else:
-            raise ValueError('Only text2img, img2img and inpainting available')
+            raise ValueError('Only text2img, img2img and inpainting is available')
         self.tokenizer1 = AutoTokenizer.from_pretrained(self.config['tokenizer_name1'])
         self.tokenizer2 = AutoTokenizer.from_pretrained(self.config['tokenizer_name2'])
-        self.text_encoder = TextEncoder(**self.config['text_enc_params']).to('cuda').eval()
-
+        self.text_encoder1 = TextEncoder(**self.config['text_enc_params1']).to('cuda').eval()
+        self.text_encoder2 = TextEncoder(**self.config['text_enc_params2']).to('cuda').eval()
         if vae_path is not None:
             self.config['image_enc_params']['params']['ckpt_path'] = vae_path
 
@@ -48,6 +49,7 @@ class Natalle:
         self.model.load_state_dict(torch.load(model_path), strict=False)
         self.model.eval()
         self.model.to(self.device)
+
     def get_new_h_w(self, h, w):
         new_h = h // 64
         if h % 64 != 0:
@@ -56,6 +58,21 @@ class Natalle:
         if w % 64 != 0:
             new_w += 1
         return new_h * 8, new_w * 8
+
+    def encode_text(self, text_encoder, tokenizer, prompt, batch_size):
+        text_encoding = tokenizer(
+            [prompt] * batch_size + [''] * batch_size,
+            max_length=77,
+            padding="max_length",
+            truncation=True,
+            return_attention_mask=True,
+            add_special_tokens=True,
+            return_tensors="pt")
+        tokens = text_encoding['input_ids'].to(self.device)
+        mask = text_encoding['attention_mask'].to(self.device)
+        full_emb, pooled_emb = text_encoder(tokens=tokens, mask=mask)
+        return full_emb, pooled_emb
+
     def generate_img(self, prompt, batch_size=1,
                      diffusion=None,
                      guidance_scale=7, progress=True, dynamic_threshold_v=99.5,
@@ -64,30 +81,15 @@ class Natalle:
                      ):
         new_h, new_w = self.get_new_h_w(h, w)
         full_batch_size = batch_size * 2
-        text_encoding = self.tokenizer1(
-            [prompt] * batch_size + [''] * batch_size,
-            max_length=77,
-            padding="max_length",
-            truncation=True,
-            return_attention_mask=True,
-            add_special_tokens=True,
-            return_tensors="pt")
-
-        tokens = text_encoding['input_ids'].to(self.device)
-        mask = text_encoding['attention_mask'].to(self.device)
-
         model_kwargs = {}
-        model_kwargs['full_emb'], model_kwargs['pooled_emb'] = self.text_encoder(tokens=tokens, mask=mask)
-        text_encoding2 = self.tokenizer2(
-            [prompt] * batch_size + [''] * batch_size,
-            max_length=77,
-            padding="max_length",
-            truncation=True,
-            return_attention_mask=True,
-            add_special_tokens=True,
-            return_tensors="pt")
-        model_kwargs['input_ids'], model_kwargs['attention_mask'] = text_encoding2['input_ids'].to(self.device), \
-                                                                    text_encoding2['attention_mask'].to(self.device)
+        model_kwargs['full_emb1'], model_kwargs['pooled_emb1'] = self.encode_text(text_encoder=self.text_encoder1,
+                                                                                  tokenizer=self.tokenizer1,
+                                                                                  prompt=prompt,
+                                                                                  batch_size=batch_size)
+        model_kwargs['full_emb2'], model_kwargs['pooled_emb2'] = self.encode_text(text_encoder=self.text_encoder2,
+                                                                                  tokenizer=self.tokenizer2,
+                                                                                  prompt=prompt,
+                                                                                  batch_size=batch_size)
         if self.task_type == 'inpainting':
             init_img = init_img.to(self.device)
             img_mask = img_mask.to(self.device)
@@ -105,10 +107,21 @@ class Natalle:
             return torch.cat([eps, rest], dim=1)
 
         def denoised_fn(x_start,):
+            if denoised_type == 'dynamic_threshold':
+                x2 = torch.clone(x_start).cpu().detach().numpy()
+                p = dynamic_threshold_v
+                s = np.percentile(
+                    np.abs(x2), p,
+                    axis=tuple(range(1, x2.ndim)))[0]
+                s = max(s, 1.0)
+                x_start = torch.clip(x_start, -s, s) / s
+            elif denoised_type == 'clip_denoised':
+                x_start = x_start.clamp(-1, 1)
             return (
                     x_start * (1 - img_mask)
                     + init_img * img_mask
             )
+        
         if self.task_type == 'inpainting':
             denoised_function = denoised_fn
         else:
@@ -143,11 +156,11 @@ class Natalle:
                                  diffusion=diffusion,
                                  guidance_scale=guidance_scale, progress=progress,
                                  dynamic_threshold_v=dynamic_threshold_v, denoised_type=denoised_type,
-                                    h=h, w=w)
+                                 h=h, w=w)
 
     def generate_img2img(self, prompt, pil_img, strength=0.7,
-                          num_steps=100, guidance_scale=7, progress=True,
-                          dynamic_threshold_v=99.5, denoised_type='dynamic_threshold'):
+                         num_steps=100, guidance_scale=7, progress=True,
+                         dynamic_threshold_v=99.5, denoised_type='dynamic_threshold'):
 
         config = deepcopy(self.config)
         config['diffusion_config']['timestep_respacing'] = str(num_steps)
@@ -156,7 +169,8 @@ class Natalle:
         image = self.image_encoder.encode(image).sample() * self.scale
         start_step = int(diffusion.num_timesteps * (1 - strength))
         image = q_sample(image, torch.tensor(diffusion.timestep_map[start_step - 1]).to(self.device),
-                         schedule_name=config['diffusion_config']['noise_schedule'], num_steps=config['diffusion_config']['steps'])
+                         schedule_name=config['diffusion_config']['noise_schedule'],
+                         num_steps=config['diffusion_config']['steps'])
         image = image.repeat(2, 1, 1, 1)
         return self.generate_img(prompt=prompt, batch_size=1,
                                  diffusion=diffusion, noise=image,
@@ -165,8 +179,8 @@ class Natalle:
                                  init_step=start_step)
 
     def generate_inpainting(self, prompt, pil_img, img_mask,
-                          num_steps=100, guidance_scale=7, progress=True,
-                          dynamic_threshold_v=99.5, denoised_type='dynamic_threshold'):
+                            num_steps=100, guidance_scale=7, progress=True,
+                            dynamic_threshold_v=99.5, denoised_type='dynamic_threshold'):
         config = deepcopy(self.config)
         config['diffusion_config']['timestep_respacing'] = str(num_steps)
         diffusion = create_gaussian_diffusion(**config['diffusion_config'])

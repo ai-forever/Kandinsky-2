@@ -2,7 +2,7 @@ from .utils import get_named_beta_schedule
 from . import gaussian_diffusion as gd
 from .respace import SpacedDiffusion, space_timesteps
 from .text2im_model import (
-    Text2ImUNet, SuperResText2ImUNet, InpaintText2ImUNet
+    Text2ImUNet, InpaintText2ImUNet
 )
 
 
@@ -24,7 +24,6 @@ def create_model(
         cache_text_emb,
         text_encoder_in_dim1,
         text_encoder_in_dim2,
-        text_enc_name,
         pooling_type,
         in_channels,
         out_channels,
@@ -70,7 +69,6 @@ def create_model(
         cache_text_emb=cache_text_emb,
         text_encoder_in_dim1=text_encoder_in_dim1,
         text_encoder_in_dim2=text_encoder_in_dim2,
-        text_enc_name=text_enc_name,
         pooling_type=pooling_type,
     )
 

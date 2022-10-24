@@ -8,7 +8,6 @@ import math
 from abc import abstractmethod
 from .fp16_util import convert_module_to_f16, convert_module_to_f32
 from .text_encoders import AttentionPooling
-from transformers import MT5EncoderModel 
 class Text2ImUNet(UNetModel):
 
     def __init__(
@@ -16,7 +15,6 @@ class Text2ImUNet(UNetModel):
             model_dim,
             text_encoder_in_dim1=1024,
             text_encoder_in_dim2=640,
-            text_enc_name='google/mt5-small',
             pooling_type='attention_pooling',  # ['from_model', 'attention_pooling']
             *args,
             cache_text_emb=True,
@@ -26,9 +24,6 @@ class Text2ImUNet(UNetModel):
         self.model_dim = model_dim
         super().__init__(*args, **kwargs, encoder_channels=model_dim)
         self.pooling_type = pooling_type
-        self.text_encoder = MT5EncoderModel.from_pretrained(text_enc_name)
-        for param in self.text_encoder.parameters():
-            param.requires_grad = False
 
         self.to_model_dim = nn.Linear(text_encoder_in_dim1, model_dim)
 
@@ -50,23 +45,22 @@ class Text2ImUNet(UNetModel):
         self.proj.to(torch.float16)
         self.to_model_dim.to(torch.float16)
         self.to_model_dim2.to(torch.float16)
-        self.text_encoder.to(torch.float16)
         self.proj2.to(torch.float16)
         self.ln_model1.to(torch.float16)
         self.ln_model2.to(torch.float16)
         self.ln_model3.to(torch.float16)
 
-    def get_text_emb(self, full_emb=None, pooled_emb=None, input_ids=None, attention_mask=None):
+    def get_text_emb(self, full_emb1=None, pooled_emb1=None, full_emb2=None, pooled_emb2=None):
         if self.cache is not None and self.cache_text_emb:
             return self.cache
         if self.pooling_type == 'from_model':
-            xf_proj = self.proj(pooled_emb)
+            xf_proj = self.proj(pooled_emb1)
         elif self.pooling_type == 'attention_pooling':
-            xf_proj = self.proj(full_emb)
+            xf_proj = self.proj(full_emb1)
         xf_proj = self.ln_model2(xf_proj)
-        full_emb2 = self.text_encoder(input_ids=input_ids, attention_mask=attention_mask)['last_hidden_state']
-        xf_proj += self.ln_model3(self.proj2(full_emb2))
-        xf_out = self.ln_model1(torch.cat([self.to_model_dim(full_emb), self.to_model_dim2(full_emb2)], dim=1))
+        pooled_emb2 = self.ln_model3(self.proj2(full_emb2))
+        xf_proj += pooled_emb2
+        xf_out = self.ln_model1(torch.cat([self.to_model_dim(full_emb1), self.to_model_dim2(full_emb2)], dim=1))
 
         xf_out = xf_out.permute(0, 2, 1)  # NLC -> NCL
         outputs = dict(xf_proj=xf_proj, xf_out=xf_out)
@@ -78,10 +72,10 @@ class Text2ImUNet(UNetModel):
     def del_cache(self):
         self.cache = None
 
-    def forward(self, x, timesteps, full_emb=None, pooled_emb=None, input_ids=None, attention_mask=None):
+    def forward(self, x, timesteps, full_emb1=None, pooled_emb1=None, full_emb2=None, pooled_emb2=None):
         hs = []
         emb = self.time_embed(timestep_embedding(timesteps, self.model_channels))
-        text_outputs = self.get_text_emb(full_emb=full_emb, pooled_emb=pooled_emb, input_ids=input_ids, attention_mask=attention_mask)
+        text_outputs = self.get_text_emb(full_emb1=full_emb1, pooled_emb1=pooled_emb1, full_emb2=full_emb2, pooled_emb2=pooled_emb2)
         xf_proj, xf_out = text_outputs["xf_proj"], text_outputs["xf_out"]
         emb = emb + xf_proj.to(emb)
         h = x.type(self.dtype)
@@ -96,30 +90,6 @@ class Text2ImUNet(UNetModel):
         h = self.out(h)
         return h
 
-
-class SuperResText2ImUNet(Text2ImUNet):
-    """
-    A text2im model that performs super-resolution.
-    Expects an extra kwarg `low_res` to condition on a low-resolution image.
-    """
-
-    def __init__(self, *args, **kwargs):
-        if "in_channels" in kwargs:
-            kwargs = dict(kwargs)
-            kwargs["in_channels"] = kwargs["in_channels"] * 2
-        else:
-            # Curse you, Python. Or really, just curse positional arguments :|.
-            args = list(args)
-            args[1] = args[1] * 2
-        super().__init__(*args, **kwargs)
-
-    def forward(self, x, timesteps, low_res=None, **kwargs):
-        _, _, new_height, new_width = x.shape
-        upsampled = F.interpolate(
-            low_res, (new_height, new_width), mode="bilinear", align_corners=False
-        )
-        x = torch.cat([x, upsampled], dim=1)
-        return super().forward(x, timesteps, **kwargs)
     
 class InpaintText2ImUNet(Text2ImUNet):
     """
