@@ -10,7 +10,7 @@ from .text_encoders import TextEncoder
 from .vqgan.autoencoder import VQModelInterface, AutoencoderKL
 from copy import deepcopy
 import torch.nn.functional as F
-
+import numpy as np
 from .utils import prepare_image, q_sample, process_images
 
 
