@@ -1,4 +1,4 @@
-from natalle.model_creation import create_model, create_gaussian_diffusion
+from .model.model_creation import create_model, create_gaussian_diffusion
 from transformers import AutoTokenizer
 from PIL import Image
 import cv2
@@ -6,12 +6,13 @@ import torch
 from omegaconf import OmegaConf
 import clip
 import math
-from .text_encoders import TextEncoder
+from .model.text_encoders import TextEncoder
 from .vqgan.autoencoder import VQModelInterface, AutoencoderKL
 from copy import deepcopy
 import torch.nn.functional as F
 import numpy as np
 from .utils import prepare_image, q_sample, process_images
+
 
 
 class Natalle:

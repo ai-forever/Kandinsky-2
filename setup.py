@@ -4,7 +4,8 @@ setup(
     name="natalle",
     packages=[
         "natalle",
-        "natalle.vqgan"
+        "natalle/vqgan",
+	"natalle/model"
     ],
     install_requires=[
         "Pillow",
