@@ -14,7 +14,6 @@ import numpy as np
 from .utils import prepare_image, q_sample, process_images
 
 
-
 class Natalle:
     def __init__(self, config_path, model_path, device, task_type='text2img', vae_path=None):
         self.config = dict(OmegaConf.load(config_path))
@@ -30,8 +29,11 @@ class Natalle:
             raise ValueError('Only text2img, img2img and inpainting is available')
         self.tokenizer1 = AutoTokenizer.from_pretrained(self.config['tokenizer_name1'])
         self.tokenizer2 = AutoTokenizer.from_pretrained(self.config['tokenizer_name2'])
+
         self.text_encoder1 = TextEncoder(**self.config['text_enc_params1']).to('cuda').eval()
         self.text_encoder2 = TextEncoder(**self.config['text_enc_params2']).to('cuda').eval()
+
+        self.use_fp16 = self.config['model_config']['use_fp16']
         if vae_path is not None:
             self.config['image_enc_params']['params']['ckpt_path'] = vae_path
 
@@ -48,6 +50,11 @@ class Natalle:
         self.config['model_config']['cache_text_emb'] = True
         self.model = create_model(**self.config['model_config'])
         self.model.load_state_dict(torch.load(model_path), strict=False)
+        if self.use_fp16:
+            self.model.convert_to_fp16()
+            self.text_encoder1 = self.text_encoder1.half()
+            self.text_encoder2 = self.text_encoder2.half()
+            self.image_encoder = self.image_encoder.half()
         self.model.eval()
         self.model.to(self.device)
 
@@ -60,6 +67,7 @@ class Natalle:
             new_w += 1
         return new_h * 8, new_w * 8
 
+    @torch.no_grad()
     def encode_text(self, text_encoder, tokenizer, prompt, batch_size):
         text_encoding = tokenizer(
             [prompt] * batch_size + [''] * batch_size,
@@ -69,20 +77,30 @@ class Natalle:
             return_attention_mask=True,
             add_special_tokens=True,
             return_tensors="pt")
+
         tokens = text_encoding['input_ids'].to(self.device)
         mask = text_encoding['attention_mask'].to(self.device)
+
         full_emb, pooled_emb = text_encoder(tokens=tokens, mask=mask)
         return full_emb, pooled_emb
 
+    @torch.no_grad()
     def generate_img(self, prompt, batch_size=1,
                      diffusion=None,
                      guidance_scale=7, progress=True, dynamic_threshold_v=99.5,
                      denoised_type='dynamic_threshold', init_step=None, noise=None,
                      init_img=None, img_mask=None, h=512, w=512,
                      ):
+
         new_h, new_w = self.get_new_h_w(h, w)
         full_batch_size = batch_size * 2
         model_kwargs = {}
+        if noise is not None and self.use_fp16:
+            noise = noise.half()
+        if init_img is not None and self.use_fp16:
+            init_img = init_img.half()
+        if img_mask is not None and self.use_fp16:
+            img_mask = img_mask.half()
         model_kwargs['full_emb1'], model_kwargs['pooled_emb1'] = self.encode_text(text_encoder=self.text_encoder1,
                                                                                   tokenizer=self.tokenizer1,
                                                                                   prompt=prompt,
@@ -107,7 +125,7 @@ class Natalle:
             eps = torch.cat([half_eps, half_eps], dim=0)
             return torch.cat([eps, rest], dim=1)
 
-        def denoised_fn(x_start,):
+        def denoised_fn(x_start, ):
             if denoised_type == 'dynamic_threshold':
                 x2 = torch.clone(x_start).cpu().detach().numpy()
                 p = dynamic_threshold_v
@@ -122,7 +140,7 @@ class Natalle:
                     x_start * (1 - img_mask)
                     + init_img * img_mask
             )
-        
+
         if self.task_type == 'inpainting':
             denoised_function = denoised_fn
         else:
@@ -142,11 +160,13 @@ class Natalle:
         )[:batch_size]
         self.model.del_cache()
         if self.use_image_enc:
-            with torch.no_grad():
-                samples = self.image_encoder.decode(samples / self.scale)
+            if self.use_fp16:
+                samples = samples.half()
+            samples = self.image_encoder.decode(samples / self.scale)
         samples = samples[:, :, :h, :w]
         return process_images(samples)
 
+    @torch.no_grad()
     def generate_text2img(self, prompt, num_steps=100,
                           batch_size=1, guidance_scale=7, progress=True,
                           dynamic_threshold_v=99.5, denoised_type='dynamic_threshold', h=512, w=512):
@@ -159,6 +179,7 @@ class Natalle:
                                  dynamic_threshold_v=dynamic_threshold_v, denoised_type=denoised_type,
                                  h=h, w=w)
 
+    @torch.no_grad()
     def generate_img2img(self, prompt, pil_img, strength=0.7,
                          num_steps=100, guidance_scale=7, progress=True,
                          dynamic_threshold_v=99.5, denoised_type='dynamic_threshold'):
@@ -167,6 +188,8 @@ class Natalle:
         config['diffusion_config']['timestep_respacing'] = str(num_steps)
         diffusion = create_gaussian_diffusion(**config['diffusion_config'])
         image = prepare_image(pil_img).to(self.device)
+        if self.use_fp16:
+            image = image.half()
         image = self.image_encoder.encode(image).sample() * self.scale
         start_step = int(diffusion.num_timesteps * (1 - strength))
         image = q_sample(image, torch.tensor(diffusion.timestep_map[start_step - 1]).to(self.device),
@@ -179,6 +202,7 @@ class Natalle:
                                  dynamic_threshold_v=dynamic_threshold_v, denoised_type=denoised_type,
                                  init_step=start_step)
 
+    @torch.no_grad()
     def generate_inpainting(self, prompt, pil_img, img_mask,
                             num_steps=100, guidance_scale=7, progress=True,
                             dynamic_threshold_v=99.5, denoised_type='dynamic_threshold'):
@@ -186,12 +210,16 @@ class Natalle:
         config['diffusion_config']['timestep_respacing'] = str(num_steps)
         diffusion = create_gaussian_diffusion(**config['diffusion_config'])
         image = prepare_image(pil_img).to(self.device)
+        if self.use_fp16:
+            image = image.half()
         image = self.image_encoder.encode(image).sample() * self.scale
         image_shape = tuple(image.shape[-2:])
         img_mask = torch.from_numpy(img_mask).unsqueeze(0).unsqueeze(0)
         img_mask = F.interpolate(
             img_mask, image_shape, mode="nearest",
         ).to(self.device)
+        if self.use_fp16:
+            img_mask = img_mask.half()
         image = image.repeat(2, 1, 1, 1)
         img_mask = img_mask.repeat(2, 1, 1, 1)
         return self.generate_img(prompt=prompt, batch_size=1,

@@ -8,6 +8,8 @@ import math
 from abc import abstractmethod
 from .fp16_util import convert_module_to_f16, convert_module_to_f32
 from .text_encoders import AttentionPooling
+
+
 class Text2ImUNet(UNetModel):
 
     def __init__(
@@ -38,7 +40,6 @@ class Text2ImUNet(UNetModel):
         self.ln_model3 = nn.LayerNorm(self.model_channels * 4)
         self.cache_text_emb = cache_text_emb
         self.cache = None
-        
 
     def convert_to_fp16(self):
         super().convert_to_fp16()
@@ -58,7 +59,7 @@ class Text2ImUNet(UNetModel):
         elif self.pooling_type == 'attention_pooling':
             xf_proj = self.proj(full_emb1)
         xf_proj = self.ln_model2(xf_proj)
-        pooled_emb2 = self.ln_model3(self.proj2(full_emb2))
+        pooled_emb2 = self.ln_model3(self.  proj2(full_emb2))
         xf_proj += pooled_emb2
         xf_out = self.ln_model1(torch.cat([self.to_model_dim(full_emb1), self.to_model_dim2(full_emb2)], dim=1))
 
@@ -75,7 +76,8 @@ class Text2ImUNet(UNetModel):
     def forward(self, x, timesteps, full_emb1=None, pooled_emb1=None, full_emb2=None, pooled_emb2=None):
         hs = []
         emb = self.time_embed(timestep_embedding(timesteps, self.model_channels))
-        text_outputs = self.get_text_emb(full_emb1=full_emb1, pooled_emb1=pooled_emb1, full_emb2=full_emb2, pooled_emb2=pooled_emb2)
+        text_outputs = self.get_text_emb(full_emb1=full_emb1, pooled_emb1=pooled_emb1, full_emb2=full_emb2,
+                                         pooled_emb2=pooled_emb2)
         xf_proj, xf_out = text_outputs["xf_proj"], text_outputs["xf_out"]
         emb = emb + xf_proj.to(emb)
         h = x.type(self.dtype)
@@ -86,11 +88,11 @@ class Text2ImUNet(UNetModel):
         for module in self.output_blocks:
             h = torch.cat([h, hs.pop()], dim=1)
             h = module(h, emb, xf_out)
-        h = h.type(x.dtype)
+        h = h.type(torch.float32)
         h = self.out(h)
         return h
 
-    
+
 class InpaintText2ImUNet(Text2ImUNet):
     """
     A text2im model which can perform inpainting.

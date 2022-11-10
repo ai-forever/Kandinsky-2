@@ -11,8 +11,8 @@ model_config:
   model_dim: 768
   use_scale_shift_norm: true
   resblock_updown: true
-  use_fp16: false
-  cache_text_emb: false
+  use_fp16: true
+  cache_text_emb: true
   text_encoder_in_dim1: 1024
   text_encoder_in_dim2: 640
   pooling_type: from_model
