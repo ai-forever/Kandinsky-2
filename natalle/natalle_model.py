@@ -89,7 +89,7 @@ class Natalle:
                      diffusion=None,
                      guidance_scale=7, progress=True, dynamic_threshold_v=99.5,
                      denoised_type='dynamic_threshold', init_step=None, noise=None,
-                     init_img=None, img_mask=None, h=512, w=512,
+                     init_img=None, img_mask=None, h=512, w=512, sampler='ddim_sampler', ddim_eta=0.8,
                      ):
 
         new_h, new_w = self.get_new_h_w(h, w)
@@ -146,18 +146,35 @@ class Natalle:
         else:
             denoised_function = None
         self.model.del_cache()
-        samples = diffusion.p_sample_loop(
-            model_fn,
-            (full_batch_size, 4, new_h, new_w),
-            device=self.device,
-            denoised_type=denoised_type,
-            dynamic_threshold_v=dynamic_threshold_v,
-            noise=noise,
-            progress=progress,
-            model_kwargs=model_kwargs,
-            init_step=init_step,
-            denoised_fn=denoised_function,
-        )[:batch_size]
+        if sampler == 'p_sampler':
+            samples = diffusion.p_sample_loop(
+                model_fn,
+                (full_batch_size, 4, new_h, new_w),
+                device=self.device,
+                denoised_type=denoised_type,
+                dynamic_threshold_v=dynamic_threshold_v,
+                noise=noise,
+                progress=progress,
+                model_kwargs=model_kwargs,
+                init_step=init_step,
+                denoised_fn=denoised_function,
+            )[:batch_size]
+        elif sampler == 'ddim_sampler':
+            samples = diffusion.ddim_sample_loop(
+                model_fn,
+                (full_batch_size, 4, new_h, new_w),
+                device=self.device,
+                denoised_type=denoised_type,
+                dynamic_threshold_v=dynamic_threshold_v,
+                noise=noise,
+                progress=progress,
+                model_kwargs=model_kwargs,
+                init_step=init_step,
+                denoised_fn=denoised_function,
+                eta=ddim_eta
+            )[:batch_size]
+        else:
+            print(1 / 0)
         self.model.del_cache()
         if self.use_image_enc:
             if self.use_fp16:
@@ -169,23 +186,29 @@ class Natalle:
     @torch.no_grad()
     def generate_text2img(self, prompt, num_steps=100,
                           batch_size=1, guidance_scale=7, progress=True,
-                          dynamic_threshold_v=99.5, denoised_type='dynamic_threshold', h=512, w=512):
+                          dynamic_threshold_v=99.5, denoised_type='dynamic_threshold', h=512, w=512
+                          , sampler='ddim_sampler', ddim_eta=0.8):
         config = deepcopy(self.config)
         config['diffusion_config']['timestep_respacing'] = str(num_steps)
+        if sampler == 'ddim_sampler':
+            config['diffusion_config']['timestep_respacing'] = 'ddim' + config['diffusion_config']['timestep_respacing']
         diffusion = create_gaussian_diffusion(**config['diffusion_config'])
         return self.generate_img(prompt=prompt, batch_size=batch_size,
                                  diffusion=diffusion,
                                  guidance_scale=guidance_scale, progress=progress,
                                  dynamic_threshold_v=dynamic_threshold_v, denoised_type=denoised_type,
-                                 h=h, w=w)
+                                 h=h, w=w, sampler=sampler, ddim_eta=ddim_eta)
 
     @torch.no_grad()
     def generate_img2img(self, prompt, pil_img, strength=0.7,
                          num_steps=100, guidance_scale=7, progress=True,
-                         dynamic_threshold_v=99.5, denoised_type='dynamic_threshold'):
+                         dynamic_threshold_v=99.5, denoised_type='dynamic_threshold'
+                         , sampler='ddim_sampler', ddim_eta=0.8):
 
         config = deepcopy(self.config)
         config['diffusion_config']['timestep_respacing'] = str(num_steps)
+        if sampler == 'ddim_sampler':
+            config['diffusion_config']['timestep_respacing'] = 'ddim' + config['diffusion_config']['timestep_respacing']
         diffusion = create_gaussian_diffusion(**config['diffusion_config'])
         image = prepare_image(pil_img).to(self.device)
         if self.use_fp16:
@@ -200,14 +223,17 @@ class Natalle:
                                  diffusion=diffusion, noise=image,
                                  guidance_scale=guidance_scale, progress=progress,
                                  dynamic_threshold_v=dynamic_threshold_v, denoised_type=denoised_type,
-                                 init_step=start_step)
+                                 init_step=start_step, sampler=sampler, ddim_eta=ddim_eta)
 
     @torch.no_grad()
     def generate_inpainting(self, prompt, pil_img, img_mask,
                             num_steps=100, guidance_scale=7, progress=True,
-                            dynamic_threshold_v=99.5, denoised_type='dynamic_threshold'):
+                            dynamic_threshold_v=99.5, denoised_type='dynamic_threshold',
+                            sampler='ddim_sampler', ddim_eta=0.8):
         config = deepcopy(self.config)
         config['diffusion_config']['timestep_respacing'] = str(num_steps)
+        if sampler == 'ddim_sampler':
+            config['diffusion_config']['timestep_respacing'] = 'ddim' + config['diffusion_config']['timestep_respacing']
         diffusion = create_gaussian_diffusion(**config['diffusion_config'])
         image = prepare_image(pil_img).to(self.device)
         if self.use_fp16:
@@ -226,4 +252,4 @@ class Natalle:
                                  diffusion=diffusion,
                                  guidance_scale=guidance_scale, progress=progress,
                                  dynamic_threshold_v=dynamic_threshold_v, denoised_type=denoised_type,
-                                 init_img=image, img_mask=img_mask, )
+                                 init_img=image, img_mask=img_mask, sampler=sampler, ddim_eta=ddim_eta )
