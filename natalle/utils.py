@@ -15,18 +15,18 @@ def prepare_mask(mask):
             if old_mask[0][i][j] == 1:
                 continue
             if i != 0:
-                mask[:, i - 1:, j] = 0
+                mask[:, i - 1, j] = 0
             if j != 0:
-                mask[:, i:, j - 1] = 0
+                mask[:, i, j - 1] = 0
             if i != 0 and j != 0:
-                mask[:, i - 1:, j - 1] = 0
+                mask[:, i - 1, j - 1] = 0
             if i != mask.shape[1] - 1:
-                mask[:, i + 1:, j] = 0
+                mask[:, i + 1, j] = 0
             if j != mask.shape[2] - 1:
-                mask[:, i:, j + 1] = 0
+                mask[:, i, j + 1] = 0
             if i != mask.shape[1] - 1 and j != mask.shape[2] - 1:
-                mask[:, i + 1:, j + 1] = 0
-    return mask.unsqueeze(0)       
+                mask[:, i + 1, j + 1] = 0
+    return mask.unsqueeze(0)          
 
 def prepare_image(pil_image):
     w, h = pil_image.size
