@@ -5,7 +5,28 @@ import torch
 import torch.nn as nn
 import importlib
 from .model.utils import get_named_beta_schedule, _extract_into_tensor
+from copy import deepcopy
 
+def prepare_mask(mask):
+    mask = mask.float()[0]
+    old_mask = deepcopy(mask)
+    for i in range(mask.shape[1]):
+        for j in range(mask.shape[2]):
+            if old_mask[0][i][j] == 1:
+                continue
+            if i != 0:
+                mask[:, i - 1:, j] = 0
+            if j != 0:
+                mask[:, i:, j - 1] = 0
+            if i != 0 and j != 0:
+                mask[:, i - 1:, j - 1] = 0
+            if i != mask.shape[1] - 1:
+                mask[:, i + 1:, j] = 0
+            if j != mask.shape[2] - 1:
+                mask[:, i:, j + 1] = 0
+            if i != mask.shape[1] - 1 and j != mask.shape[2] - 1:
+                mask[:, i + 1:, j + 1] = 0
+    return mask.unsqueeze(0)       
 
 def prepare_image(pil_image):
     w, h = pil_image.size

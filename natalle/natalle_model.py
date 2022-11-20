@@ -11,7 +11,7 @@ from .vqgan.autoencoder import VQModelInterface, AutoencoderKL
 from copy import deepcopy
 import torch.nn.functional as F
 import numpy as np
-from .utils import prepare_image, q_sample, process_images
+from .utils import prepare_image, q_sample, process_images, prepare_mask
 
 
 class Natalle:
@@ -243,7 +243,8 @@ class Natalle:
         img_mask = torch.from_numpy(img_mask).unsqueeze(0).unsqueeze(0)
         img_mask = F.interpolate(
             img_mask, image_shape, mode="nearest",
-        ).to(self.device)
+        )
+        img_mask = prepare_mask(img_mask).to(self.device)
         if self.use_fp16:
             img_mask = img_mask.half()
         image = image.repeat(2, 1, 1, 1)
