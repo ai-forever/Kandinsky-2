@@ -1,8 +1,13 @@
 # NATALLE
+
+![](./content/NatallE.png)
 ### inpainting
 https://drive.google.com/file/d/1dCmCmI3jJC_LM9oFgJcn4JUoAfS2s-6D/view?usp=sharing
 
 ## 1. text2img
+
+![A teddy bear on a skateboard на красной площади](./content/bear.jpeg)
+
 ```python
 from natalle.natalle_model import Natalle
 
