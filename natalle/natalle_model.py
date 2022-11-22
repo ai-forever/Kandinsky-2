@@ -30,8 +30,8 @@ class Natalle:
         self.tokenizer1 = AutoTokenizer.from_pretrained(self.config['tokenizer_name1'])
         self.tokenizer2 = AutoTokenizer.from_pretrained(self.config['tokenizer_name2'])
 
-        self.text_encoder1 = TextEncoder(**self.config['text_enc_params1']).to('cuda').eval()
-        self.text_encoder2 = TextEncoder(**self.config['text_enc_params2']).to('cuda').eval()
+        self.text_encoder1 = TextEncoder(**self.config['text_enc_params1']).to(self.device).eval()
+        self.text_encoder2 = TextEncoder(**self.config['text_enc_params2']).to(self.device).eval()
 
         self.use_fp16 = self.config['model_config']['use_fp16']
         if vae_path is not None:
@@ -41,9 +41,9 @@ class Natalle:
             self.use_image_enc = True
             self.scale = self.config['image_enc_params']['scale']
             if self.config['image_enc_params']['name'] == 'AutoencoderKL':
-                self.image_encoder = AutoencoderKL(**self.config['image_enc_params']['params']).to('cuda')
+                self.image_encoder = AutoencoderKL(**self.config['image_enc_params']['params']).to(self.device)
             elif self.config['image_enc_params']['name'] == 'VQModelInterface':
-                self.image_encoder = VQModelInterface(**self.config['image_enc_params']['params']).to('cuda')
+                self.image_encoder = VQModelInterface(**self.config['image_enc_params']['params']).to(self.device)
             self.image_encoder.eval()
         else:
             self.use_image_enc = False
