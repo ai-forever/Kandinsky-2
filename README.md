@@ -1,4 +1,4 @@
-# NATALLE
+# Kandinsky 2.0
 
 ![](./content/NatallE.png)
 ### inpainting
