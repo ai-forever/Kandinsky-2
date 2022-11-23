@@ -1,8 +1,6 @@
 # Kandinsky 2.0
 
-[![Framework: PyTorch](https://img.shields.io/badge/Framework-PyTorch-orange.svg)](https://pytorch.org/) [![Huggingface space](https://img.shields.io/badge/🤗-Huggingface-yello.svg)]([https://huggingface.co/spaces/shi-labs/OneFormer](https://huggingface.co/sberbank-ai/Kandinsky_2.0)) [![Open In Colab]()
-
-### 🤗 HF Model: [Kandinsky 2.0](https://huggingface.co/sberbank-ai/Kandinsky_2.0)
+[![Framework: PyTorch](https://img.shields.io/badge/Framework-PyTorch-orange.svg)](https://pytorch.org/) [![Huggingface space](https://img.shields.io/badge/🤗-Huggingface-yello.svg)]([https://huggingface.co/spaces/shi-labs/OneFormer](https://huggingface.co/sberbank-ai/Kandinsky_2.0))
 
 It is a latent diffusion model with two multi-lingual text encoders:
 * mCLIP-XLMR (560M parameters)
