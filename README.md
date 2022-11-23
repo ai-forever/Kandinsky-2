@@ -23,13 +23,13 @@ images = model.generate_img2img('a photo of realistic landscape', init_image, st
 ```
 ## 3. inpainting
 ```python 
-from natalle.natalle_model import Natalle
+from kandinsky2 import get_kandinsky2
 from PIL import Image
 import numpy as np
 
-model = Natalle('inference.yaml', 'natalle_inpainting.pt', 'cuda', task_type='inpainting')
+model = get_kandinsky2('cuda', task_type='inpainting')
 init_image = Image.open('image.jpg')
 mask = np.ones((512, 512), dtype=np.float32)
 mask[100:] =  0
-images = model.generate_inpainting('a red car', init_image, mask, guidance_scale=7, num_steps=50)
+images = model.generate_inpainting('красная кошка', init_image, mask, num_steps=50, denoised_type='dynamic_threshold', dynamic_threshold_v=99.5, sampler='ddim_sampler', ddim_eta=0.05, guidance_scale=10)
 ```
