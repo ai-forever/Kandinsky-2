@@ -49,3 +49,5 @@ mask = np.ones((512, 512), dtype=np.float32)
 mask[100:] =  0
 images = model.generate_inpainting('красная кошка', init_image, mask, num_steps=50, denoised_type='dynamic_threshold', dynamic_threshold_v=99.5, sampler='ddim_sampler', ddim_eta=0.05, guidance_scale=10)
 ```
+
+![](./content/inpainting.png)
