@@ -28,16 +28,7 @@ images = model.generate_text2img('кошка', batch_size=4, h=512, w=512, num_s
 ```
 ![](./content/bear.jpeg)
 
-## 2. img2img
-```python
-from kandinsky2 import get_kandinsky2
-from PIL import Image
-
-model = get_kandinsky2('cuda', task_type='img2img')
-init_image = Image.open('image.jpg')
-images = model.generate_img2img('кошка', init_image, strength=0.8, num_steps=50, denoised_type='dynamic_threshold', dynamic_threshold_v=99.5, sampler='ddim_sampler', ddim_eta=0.05, guidance_scale=10)
-```
-## 3. inpainting
+## 2. inpainting
 ```python 
 from kandinsky2 import get_kandinsky2
 from PIL import Image
@@ -51,3 +42,13 @@ images = model.generate_inpainting('красная кошка', init_image, mask
 ```
 
 ![](./content/inpainting.png)
+
+## 3. img2img
+```python
+from kandinsky2 import get_kandinsky2
+from PIL import Image
+
+model = get_kandinsky2('cuda', task_type='img2img')
+init_image = Image.open('image.jpg')
+images = model.generate_img2img('кошка', init_image, strength=0.8, num_steps=50, denoised_type='dynamic_threshold', dynamic_threshold_v=99.5, sampler='ddim_sampler', ddim_eta=0.05, guidance_scale=10)
+```
