@@ -19,7 +19,7 @@ from PIL import Image
 
 model = get_kandinsky2('cuda', task_type='img2img')
 init_image = Image.open('image.jpg')
-images = model.generate_img2img('кошка',  init_image, strength=0.8, num_steps=50, denoised_type='dynamic_threshold', dynamic_threshold_v=99.5, sampler='ddim_sampler', ddim_eta=0.05, guidance_scale=10)
+images = model.generate_img2img('кошка', init_image, strength=0.8, num_steps=50, denoised_type='dynamic_threshold', dynamic_threshold_v=99.5, sampler='ddim_sampler', ddim_eta=0.05, guidance_scale=10)
 ```
 ## 3. inpainting
 ```python 
