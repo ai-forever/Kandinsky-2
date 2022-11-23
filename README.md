@@ -10,13 +10,13 @@ It is a latent diffusion model with two multilingual text encoders:
 * mCLIP-XLMR 560M parameters
 * mT5-encoder-small 146M parameters
 
-These encoders and multilingual training datasets unveil the real multilingual text2image generation experience!
+These encoders and multilingual training datasets unveil the real multilingual text-to-image generation experience!
 
-Kandinsky 2.0 was trained on a large 1B multilingual set, including samples that we used to train Kandinsky.
+**Kandinsky 2.0** was trained on a large 1B multilingual set, including samples that we used to train Kandinsky.
 
 In terms of diffusion architecture Kandinsky 2.0 implements UNet with 1.2B parameters.
 
-Kandinsky 2.0 architecture overview:
+**Kandinsky 2.0** architecture overview:
 
 ![](./content/NatallE.png)
 
