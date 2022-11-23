@@ -9,6 +9,7 @@ It is a latent diffusion model with two multilingual text encoders:
 * mT5-encoder-small 146M parameters
 
 These encoders and multilingual training datasets unveil the real multilingual text2image generation experience!
+
 **UNet 1.2B parameters**
 
 ![](./content/NatallE.png)
