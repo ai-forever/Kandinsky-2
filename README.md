@@ -9,7 +9,7 @@ It is a latent diffusion model with two multi-lingual text encoders:
 
 These encoders and multilingual training datasets unveil the real multilingual text2image generation experience!
 
-##Model architecture:
+## Model architecture:
 
 **UNet size: 1.2B parameters**
 
