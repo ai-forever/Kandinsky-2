@@ -28,6 +28,8 @@ images = model.generate_text2img('кошка', batch_size=4, h=512, w=512, num_s
 ```
 ![](./content/bear.jpeg)
 
+prompt: "A teddy bear на красной площади"
+
 ## 2. inpainting
 ```python 
 from kandinsky2 import get_kandinsky2
@@ -42,6 +44,8 @@ images = model.generate_inpainting('красная кошка', init_image, mask
 ```
 
 ![](./content/inpainting.png)
+
+prompt: "Девушка в красном платье"
 
 ## 3. img2img
 ```python
