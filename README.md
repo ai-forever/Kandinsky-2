@@ -12,7 +12,7 @@ It is a latent diffusion model with two multilingual text encoders:
 
 These encoders and multilingual training datasets unveil the real multilingual text2image generation experience!
 
-It was trained on a large 1B multilingual set, including samples that we used to train Kandinsky.
+Kandinsky 2.0 was trained on a large 1B multilingual set, including samples that we used to train Kandinsky.
 
 **UNet 1.2B parameters**
 
