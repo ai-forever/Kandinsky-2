@@ -61,7 +61,7 @@ images = model.generate_img2img('кошка', init_image, strength=0.8, num_step
 
 + Arseniy Shakhmatov: [Github](https://github.com/cene555), [Blog](https://t.me/gradientdip)
 + Anton Razzhigaev: [Github](https://github.com/razzant), [Blog](https://t.me/abstractDL)
-+ Aleksandr Nikolich: [Github](https://github.com/AlexWortega)
++ Aleksandr Nikolich: [Github](https://github.com/AlexWortega), [Blog](https://t.me/lovedeathtransformers)
 + Vladimir Arkhipkin: [Github](https://github.com/oriBetelgeuse)
 + Igor Pavlov: [Github](https://github.com/boomb0om)
 + Andrey Kuznetsov: [Github](https://github.com/kuznetsoffandrey)
