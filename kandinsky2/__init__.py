@@ -29,7 +29,7 @@ def get_kandinsky2(device, task_type='text2img', cache_dir='/tmp/kandinsky2', us
     if task_type == 'inpainting':
         model_name = 'Kandinsky-2-0-inpainting.pt'
         config_file_url = hf_hub_url(repo_id='sberbank-ai/Kandinsky_2.0', filename=model_name)
-    elif task_type == 'text2img' or inpainting == 'img2img':
+    elif task_type == 'text2img' or task_type == 'img2img':
         model_name = 'Kandinsky-2-0.pt'
         config_file_url = hf_hub_url(repo_id='sberbank-ai/Kandinsky_2.0', filename=model_name)
     else:
