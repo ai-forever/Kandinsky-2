@@ -1,11 +1,11 @@
 from setuptools import setup
 
 setup(
-    name="natalle",
+    name="kandinsky2",
     packages=[
-        "natalle",
-        "natalle/vqgan",
-	"natalle/model"
+        "kandinsky2",
+        "kandinsky2/vqgan",
+        "kandinsky2/model"
     ],
     install_requires=[
         "Pillow",
@@ -18,10 +18,13 @@ setup(
         "regex",
         "numpy",
         "blobfile",
-	"transformers==4.23.1",
-	"torchvision",
-	"omegaconf"
-	    
+        "transformers==4.23.1",
+        "torchvision",
+        "omegaconf",
+        "pytorch_lightning",
+        "einops",
+        "sentencepiece",
+  
     ],
     author="",
 )

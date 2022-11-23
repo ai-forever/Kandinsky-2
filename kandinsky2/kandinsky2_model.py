@@ -4,7 +4,6 @@ from PIL import Image
 import cv2
 import torch
 from omegaconf import OmegaConf
-import clip
 import math
 from .model.text_encoders import TextEncoder
 from .vqgan.autoencoder import VQModelInterface, AutoencoderKL
@@ -14,9 +13,9 @@ import numpy as np
 from .utils import prepare_image, q_sample, process_images, prepare_mask
 
 
-class Natalle:
-    def __init__(self, config_path, model_path, device, task_type='text2img', vae_path=None):
-        self.config = dict(OmegaConf.load(config_path))
+class Kandinsky2:
+    def __init__(self, config, model_path, device, task_type='text2img'):
+        self.config = config
         self.device = device
         self.task_type = task_type
         if task_type == 'text2img' or task_type == 'img2img':
@@ -34,8 +33,6 @@ class Natalle:
         self.text_encoder2 = TextEncoder(**self.config['text_enc_params2']).to(self.device).eval()
 
         self.use_fp16 = self.config['model_config']['use_fp16']
-        if vae_path is not None:
-            self.config['image_enc_params']['params']['ckpt_path'] = vae_path
 
         if self.config['image_enc_params'] is not None:
             self.use_image_enc = True
@@ -174,7 +171,7 @@ class Natalle:
                 eta=ddim_eta
             )[:batch_size]
         else:
-            print(1 / 0)
+            raise ValueError('Only p_sampler and ddim_sampler is available')
         self.model.del_cache()
         if self.use_image_enc:
             if self.use_fp16:
@@ -187,7 +184,7 @@ class Natalle:
     def generate_text2img(self, prompt, num_steps=100,
                           batch_size=1, guidance_scale=7, progress=True,
                           dynamic_threshold_v=99.5, denoised_type='dynamic_threshold', h=512, w=512
-                          , sampler='ddim_sampler', ddim_eta=0.8):
+                          , sampler='ddim_sampler', ddim_eta=0.05):
         config = deepcopy(self.config)
         config['diffusion_config']['timestep_respacing'] = str(num_steps)
         if sampler == 'ddim_sampler':
@@ -203,7 +200,7 @@ class Natalle:
     def generate_img2img(self, prompt, pil_img, strength=0.7,
                          num_steps=100, guidance_scale=7, progress=True,
                          dynamic_threshold_v=99.5, denoised_type='dynamic_threshold'
-                         , sampler='ddim_sampler', ddim_eta=0.8):
+                         , sampler='ddim_sampler', ddim_eta=0.05):
 
         config = deepcopy(self.config)
         config['diffusion_config']['timestep_respacing'] = str(num_steps)
@@ -229,7 +226,7 @@ class Natalle:
     def generate_inpainting(self, prompt, pil_img, img_mask,
                             num_steps=100, guidance_scale=7, progress=True,
                             dynamic_threshold_v=99.5, denoised_type='dynamic_threshold',
-                            sampler='ddim_sampler', ddim_eta=0.8):
+                            sampler='ddim_sampler', ddim_eta=0.05):
         config = deepcopy(self.config)
         config['diffusion_config']['timestep_respacing'] = str(num_steps)
         if sampler == 'ddim_sampler':

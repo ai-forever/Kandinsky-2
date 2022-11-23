@@ -3,8 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 from transformers import T5EncoderModel, MT5EncoderModel, BertModel, XLMRobertaModel
-import clip
 import transformers
+import os
 
 def attention(q, k, v, d_k):
     scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(d_k)
@@ -88,32 +88,18 @@ class ImagenCLIP(nn.Module):
         pooled_out = x[torch.arange(x.shape[0]), text.argmax(dim=-1)] @ self.text_projection
         return x, pooled_out
 
-class MCLIPConfig(transformers.PretrainedConfig):
-    model_type = "M-CLIP"
-
-    def __init__(self, modelBase='xlm-roberta-large', transformerDimSize=1024, imageDimSize=768, **kwargs):
-        self.transformerDimensions = transformerDimSize
-        self.numDims = imageDimSize
-        self.modelBase = modelBase
-        super().__init__(**kwargs)
-
-class MultilingualCLIP(transformers.PreTrainedModel):
-    config_class = MCLIPConfig
-    def __init__(self, config, *args, **kwargs):
-        super().__init__(config, *args, **kwargs)
-        self.transformer = transformers.AutoModel.from_pretrained(config.modelBase)
-        self.LinearTransformation = torch.nn.Linear(in_features=config.transformerDimensions,
-                                                    out_features=config.numDims)
+class MultilingualCLIP(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.transformer = transformers.AutoModel.from_pretrained(config)
+        self.LinearTransformation = torch.nn.Linear(in_features=1024,
+                                                    out_features=640)
+        
 
     def forward(self, input_ids, attention_mask):
         embs = self.transformer(input_ids=input_ids, attention_mask=attention_mask)[0]
         embs2 = (embs * attention_mask.unsqueeze(2)).sum(dim=1) / attention_mask.sum(dim=1)[:, None]
         return self.LinearTransformation(embs2), embs
-
-    @classmethod
-    def _load_state_dict_into_model(cls, model, state_dict, pretrained_model_name_or_path, _fast_init=True):
-        model.load_state_dict(state_dict)
-        return model, [], [], []
     
 class TextEncoder(nn.Module):
     def __init__(self, model_path, model_name):
@@ -129,7 +115,8 @@ class TextEncoder(nn.Module):
         elif self.model_name == 'BertModel':
             self.model = BertModel.from_pretrained(model_path)
         elif self.model_name == 'multiclip':
-            self.model = MultilingualCLIP.from_pretrained(model_path)
+            self.model = MultilingualCLIP(model_path)
+            self.model.load_state_dict(torch.load(os.path.join(model_path, 'pytorch_model.bin')), strict=False)
         elif self.model_name == 'xlm_roberta':
             self.model = XLMRobertaModel.from_pretrained(model_path).half()
         self.model.eval()
