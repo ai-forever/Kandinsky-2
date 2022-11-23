@@ -9,10 +9,10 @@ https://drive.google.com/file/d/1dCmCmI3jJC_LM9oFgJcn4JUoAfS2s-6D/view?usp=shari
 ![](./content/bear.jpeg)
 
 ```python
-from natalle.natalle_model import Natalle
+from kandinsky2 import get_kandinsky2
 
-model = Natalle('inference.yaml', 'natalle.pt', 'cuda', task_type='text2img')
-images = model.generate_text2img('dog in the space', batch_size=2, h=512, w=512)
+model = get_kandinsky2('cuda', task_type='text2img')
+images = model.generate_text2img('кошка', batch_size=4, h=512, w=512, num_steps=75, denoised_type='dynamic_threshold', dynamic_threshold_v=99.5, sampler='ddim_sampler', ddim_eta=0.05, guidance_scale=10)
 ```
 ## 2. img2img
 ```python
