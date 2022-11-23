@@ -14,7 +14,9 @@ These encoders and multilingual training datasets unveil the real multilingual t
 
 Kandinsky 2.0 was trained on a large 1B multilingual set, including samples that we used to train Kandinsky.
 
-**UNet 1.2B parameters**
+In terms of diffusion architecture Kandinsky 2.0 implements UNet with 1.2B parameters.
+
+Kandinsky 2.0 architecture overview:
 
 ![](./content/NatallE.png)
 
