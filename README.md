@@ -4,6 +4,7 @@
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1uPg9KwGZ2hJBl9taGA_3kyKGw12Rh3ij?usp=sharing)
 
 [Habr post](https://habr.com/ru/company/sberbank/blog/701162/)
+
 [Demo](https://fusionbrain.ai/diffusion)
 
 `pip install "git+https://github.com/ai-forever/Kandinsky-2.0.git"`
