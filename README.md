@@ -11,7 +11,7 @@
 
 ## Model architecture:
 
-![](./content/kandisky21.png)
+![](./content/kandinsky21.png)
 
 Kandinsky 2.1 inherits best practicies from DallE-2 and Latent diffucion, while introducing some new ideas.
 
