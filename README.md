@@ -1,6 +1,7 @@
 # Kandinsky 2.1
 
-[![Framework: PyTorch](https://img.shields.io/badge/Framework-PyTorch-orange.svg)](https://pytorch.org/) [![Huggingface space](https://img.shields.io/badge/🤗-Huggingface-yello.svg)](https://huggingface.co/sberbank-ai/Kandinsky_2.1) 
+[![Framework: PyTorch](https://img.shields.io/badge/Framework-PyTorch-orange.svg)](https://pytorch.org/) [![Huggingface space](https://img.shields.io/badge/🤗-Huggingface-yello.svg)](https://huggingface.co/sberbank-ai/Kandinsky_2.1)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]([https://colab.research.google.com/drive/1uPg9KwGZ2hJBl9taGA_3kyKGw12Rh3ij?usp=sharing](https://colab.research.google.com/drive/1xSbu-b-EwYd6GdaFPRVgvXBX_mciZ41e?usp=sharing))
 
 [Habr post](https://habr.com/ru/company/sberbank/blog/725282/)
 
@@ -12,7 +13,7 @@
 
 ![](./content/kandisky21.png)
 
-Kandinsky 2.1 inherits best practicies from DallE-2.0 and Latent diffucion, while introducing some new ideas.
+Kandinsky 2.1 inherits best practicies from DallE-2 and Latent diffucion, while introducing some new ideas.
 
 As text and image encoder it uses CLIP model and diffusion prior (mapping) between latetnt spaces of CLIP modalities. This approach increases the visual performance of the model and unveils new horizons in blending images and text-guided image manipulation.
 
@@ -65,7 +66,9 @@ images = model.mix_images(images_texts, weights, num_steps=150,
        prior_steps="5", negative_decoder_prompt='')
 ```
 
-### 3. image fuse
+![](./content/fuse.png)
+
+### 3. inpainting
 
 ```python
 from kandinsky2 import get_kandinsky2
@@ -84,7 +87,6 @@ images = model.generate_inpainting('man 4k photo', init_image, mask,
                           prior_steps="5")
 ```
 
-![](./content/fuse.png)
 
 # Kandinsky 2.0
 
