@@ -28,9 +28,8 @@ def prepare_mask(mask):
                 mask[:, i + 1, j + 1] = 0
     return mask.unsqueeze(0)          
 
-def prepare_image(pil_image):
-    w, h = pil_image.size
-    pil_image = pil_image.resize((512, 512), resample=Image.BICUBIC, reducing_gap=1)
+def prepare_image(pil_image, w=512, h=512):
+    pil_image = pil_image.resize((w, h), resample=Image.BICUBIC, reducing_gap=1)
     arr = np.array(pil_image.convert("RGB"))
     arr = arr.astype(np.float32) / 127.5 - 1
     arr = np.transpose(arr, [2, 0, 1])

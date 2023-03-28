@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="2129c14a-fe1c-4be9-9878-9d4e7be1fdfa" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kandinsky2/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/kandinsky2/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kandinsky2/kandinsky2_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/kandinsky2/kandinsky2_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kandinsky2/model/fp16_util.py" beforeDir="false" afterPath="$PROJECT_DIR$/kandinsky2/model/fp16_util.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kandinsky2/model/gaussian_diffusion.py" beforeDir="false" afterPath="$PROJECT_DIR$/kandinsky2/model/gaussian_diffusion.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kandinsky2/model/losses.py" beforeDir="false" afterPath="$PROJECT_DIR$/kandinsky2/model/losses.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kandinsky2/model/model_creation.py" beforeDir="false" afterPath="$PROJECT_DIR$/kandinsky2/model/model_creation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kandinsky2/model/nn.py" beforeDir="false" afterPath="$PROJECT_DIR$/kandinsky2/model/nn.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kandinsky2/model/resample.py" beforeDir="false" afterPath="$PROJECT_DIR$/kandinsky2/model/resample.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kandinsky2/model/respace.py" beforeDir="false" afterPath="$PROJECT_DIR$/kandinsky2/model/respace.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kandinsky2/model/text2im_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/kandinsky2/model/text2im_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kandinsky2/model/text_encoders.py" beforeDir="false" afterPath="$PROJECT_DIR$/kandinsky2/model/text_encoders.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kandinsky2/model/unet.py" beforeDir="false" afterPath="$PROJECT_DIR$/kandinsky2/model/unet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kandinsky2/model/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/kandinsky2/model/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kandinsky2/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/kandinsky2/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kandinsky2/vqgan/autoencoder.py" beforeDir="false" afterPath="$PROJECT_DIR$/kandinsky2/vqgan/autoencoder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kandinsky2/vqgan/quntize.py" beforeDir="false" afterPath="$PROJECT_DIR$/kandinsky2/vqgan/quntize.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kandinsky2/vqgan/vqgan_blocks.py" beforeDir="false" afterPath="$PROJECT_DIR$/kandinsky2/vqgan/vqgan_blocks.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="2NdacfLUf5C0qvPLufirAJbCutM" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="2129c14a-fe1c-4be9-9878-9d4e7be1fdfa" name="Default Changelist" comment="" />
+      <created>1679996493667</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1679996493667</updated>
+    </task>
+    <servers />
+  </component>
+</project>

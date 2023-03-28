@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
-from transformers import T5EncoderModel, MT5EncoderModel, BertModel, XLMRobertaModel
+from transformers import T5EncoderModel, MT5EncoderModel, BertModel, XLMRobertaModel, AutoConfig, XLMRobertaModel
 import transformers
 import os
 
@@ -89,11 +89,12 @@ class ImagenCLIP(nn.Module):
         return x, pooled_out
 
 class MultilingualCLIP(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, in_features=1024, out_features=640):
         super().__init__()
-        self.transformer = transformers.AutoModel.from_pretrained(config)
-        self.LinearTransformation = torch.nn.Linear(in_features=1024,
-                                                    out_features=640)
+        loaded_config = AutoConfig.from_pretrained(config)
+        self.transformer = XLMRobertaModel(loaded_config)
+        self.LinearTransformation = torch.nn.Linear(in_features=in_features,
+                                                    out_features=out_features)
         
 
     def forward(self, input_ids, attention_mask):
@@ -102,7 +103,7 @@ class MultilingualCLIP(nn.Module):
         return self.LinearTransformation(embs2), embs
     
 class TextEncoder(nn.Module):
-    def __init__(self, model_path, model_name):
+    def __init__(self, model_path, model_name, **kwargs):
         super().__init__()
         self.model_name = model_name
         if self.model_name == 'clip':
@@ -115,7 +116,7 @@ class TextEncoder(nn.Module):
         elif self.model_name == 'BertModel':
             self.model = BertModel.from_pretrained(model_path)
         elif self.model_name == 'multiclip':
-            self.model = MultilingualCLIP(model_path)
+            self.model = MultilingualCLIP(model_path, **kwargs)
             self.model.load_state_dict(torch.load(os.path.join(model_path, 'pytorch_model.bin')), strict=False)
         elif self.model_name == 'xlm_roberta':
             self.model = XLMRobertaModel.from_pretrained(model_path).half()

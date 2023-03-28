@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .fp16_util import convert_module_to_f16, convert_module_to_f32
+from ..fp16_util import convert_module_to_f16, convert_module_to_f32
 from .nn import avg_pool_nd, conv_nd, linear, normalization, timestep_embedding, zero_module
 
 
@@ -218,7 +218,6 @@ class AttentionBlock(nn.Module):
             num_head_channels=-1,
             use_checkpoint=False,
             encoder_channels=None,
-            use_flash_attention=False
     ):
         super().__init__()
         self.channels = channels
@@ -232,7 +231,7 @@ class AttentionBlock(nn.Module):
         self.use_checkpoint = use_checkpoint
         self.norm = normalization(channels, swish=0.0)
         self.qkv = conv_nd(1, channels, channels * 3, 1)
-        self.attention = QKVAttention(self.num_heads, use_flash_attention=use_flash_attention)
+        self.attention = QKVAttention(self.num_heads)
 
         if encoder_channels is not None:
             self.encoder_kv = conv_nd(1, encoder_channels, channels * 2, 1)
@@ -255,13 +254,10 @@ class QKVAttention(nn.Module):
     A module which performs QKV attention. Matches legacy QKVAttention + input/ouput heads shaping
     """
 
-    def __init__(self, n_heads, use_flash_attention=False):
+    def __init__(self, n_heads):
         super().__init__()
         self.n_heads = n_heads
-        self.use_flash_attention = use_flash_attention
-        if self.use_flash_attention:
-            from flash_attn.modules.mha import FlashCrossAttention
-            self.flash_attention = FlashCrossAttention()
+
     def forward(self, qkv, encoder_kv=None):
         """
         Apply QKV attention.
@@ -275,34 +271,16 @@ class QKVAttention(nn.Module):
         q, k, v = qkv.reshape(bs * self.n_heads, ch * 3, length).split(ch, dim=1)
         if encoder_kv is not None:
             assert encoder_kv.shape[1] == self.n_heads * ch * 2
-            
             ek, ev = encoder_kv.reshape(bs * self.n_heads, ch * 2, -1).split(ch, dim=1)
             k = torch.cat([ek, k], dim=-1)
             v = torch.cat([ev, v], dim=-1)
-        if self.use_flash_attention:  
-            q = q.reshape(q.shape[0] // self.n_heads, q.shape[1] * self.n_heads, q.shape[2])
-            k = k.reshape(k.shape[0] // self.n_heads, k.shape[1] * self.n_heads, k.shape[2])
-            v = v.reshape(v.shape[0] // self.n_heads, v.shape[1] * self.n_heads, v.shape[2])
-
-            q, k, v = q.permute(0, 2, 1), k.permute(0, 2, 1), v.permute(0, 2, 1)
-            q = q.reshape(q.shape[0], q.shape[1], self.n_heads, q.shape[2] // self.n_heads)
-            k = k.reshape(k.shape[0], k.shape[1], self.n_heads, k.shape[2] // self.n_heads)
-            v = v.reshape(v.shape[0], v.shape[1], self.n_heads, v.shape[2] // self.n_heads)
-            k, v = k.unsqueeze(2), v.unsqueeze(2)
-            kv = torch.cat([k, v], dim=2)
-            dtype_a = kv.dtype
-            out = self.flash_attention(q.to(torch.float16), kv.to(torch.float16)).to(dtype_a)
-            out = out.reshape(out.shape[0], out.shape[1], out.shape[2] * out.shape[3])
-            out = out.permute(0, 2, 1)
-            return out
-        else:
-            scale = 1 / math.sqrt(math.sqrt(ch))
-            weight = torch.einsum(
-                "bct,bcs->bts", q * scale, k * scale
-            )  # More stable with f16 than dividing afterwards
-            weight = torch.softmax(weight.float(), dim=-1).type(weight.dtype)
-            a = torch.einsum("bts,bcs->bct", weight, v)
-            return a.reshape(bs, -1, length)
+        scale = 1 / math.sqrt(math.sqrt(ch))
+        weight = torch.einsum(
+            "bct,bcs->bts", q * scale, k * scale
+        )  # More stable with f16 than dividing afterwards
+        weight = torch.softmax(weight, dim=-1).type(weight.dtype)
+        a = torch.einsum("bts,bcs->bct", weight, v)
+        return a.reshape(bs, -1, length)
 
 
 class UNetModel(nn.Module):
@@ -354,7 +332,6 @@ class UNetModel(nn.Module):
             use_scale_shift_norm=False,
             resblock_updown=False,
             encoder_channels=None,
-            use_flash_attention=False
     ):
         super().__init__()
 
@@ -415,7 +392,6 @@ class UNetModel(nn.Module):
                             num_heads=num_heads,
                             num_head_channels=num_head_channels,
                             encoder_channels=encoder_channels,
-                            use_flash_attention=use_flash_attention
                         )
                     )
                 self.input_blocks.append(TimestepEmbedSequential(*layers))
@@ -459,7 +435,6 @@ class UNetModel(nn.Module):
                 num_heads=num_heads,
                 num_head_channels=num_head_channels,
                 encoder_channels=encoder_channels,
-                use_flash_attention=use_flash_attention
             ),
             ResBlock(
                 ch,
@@ -496,7 +471,6 @@ class UNetModel(nn.Module):
                             num_heads=num_heads_upsample,
                             num_head_channels=num_head_channels,
                             encoder_channels=encoder_channels,
-                            use_flash_attention=use_flash_attention
                         )
                     )
                 if level and i == num_res_blocks:

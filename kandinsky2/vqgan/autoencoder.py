@@ -1,4 +1,5 @@
 import torch
+from torch import nn
 import pytorch_lightning as pl
 import torch.nn.functional as F
 from contextlib import contextmanager
@@ -6,7 +7,7 @@ from contextlib import contextmanager
 from .quntize import VectorQuantizer
 
 from .vqgan_blocks import Encoder, Decoder, DiagonalGaussianDistribution
-
+from .movq_modules import MOVQDecoder
 
 class VQModel(pl.LightningModule):
     def __init__(self,
@@ -148,3 +149,44 @@ class AutoencoderKL(pl.LightningModule):
             z = posterior.mode()
         dec = self.decode(z)
         return dec, posterior
+    
+    
+class MOVQ(nn.Module):
+    def __init__(self,
+                 ddconfig,
+                 n_embed,
+                 embed_dim,
+                 ):
+        super().__init__()
+        self.encoder = Encoder(**ddconfig)
+        self.decoder = MOVQDecoder(zq_ch=embed_dim, **ddconfig)
+        self.quantize = VectorQuantizer(n_embed, embed_dim, beta=0.25,
+                                        remap=None, sane_index_shape=False)
+        self.quant_conv = torch.nn.Conv2d(ddconfig["z_channels"], embed_dim, 1)
+        self.post_quant_conv = torch.nn.Conv2d(embed_dim, ddconfig["z_channels"], 1)
+    def encode(self, x):
+        h = self.encoder(x)
+        h = self.quant_conv(h)
+        #quant, emb_loss, info = self.quantize(h)
+        return h
+
+    def decode(self, quant):
+        quant2 = self.post_quant_conv(quant)
+        dec = self.decoder(quant2, quant)
+        return dec
+
+    def decode_code(self, code_b):
+        batch_size = code_b.shape[0]
+        quant = self.quantize.embedding(code_b.flatten())
+        grid_size = int((quant.shape[0] // batch_size)**0.5)
+        quant = quant.view((1, 32, 32, 4))
+        quant = rearrange(quant, 'b h w c -> b c h w').contiguous()
+        print(quant.shape)
+        quant2 = self.post_quant_conv(quant)
+        dec = self.decoder(quant2, quant)
+        return dec
+
+    def forward(self, input):
+        quant, diff, _ = self.encode(input)
+        dec = self.decode(quant)
+        return dec, diff

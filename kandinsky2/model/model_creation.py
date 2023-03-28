@@ -1,10 +1,11 @@
-from .utils import get_named_beta_schedule
+from .gaussian_diffusion import get_named_beta_schedule
 from . import gaussian_diffusion as gd
 from .respace import SpacedDiffusion, space_timesteps
 from .text2im_model import (
     Text2ImUNet, InpaintText2ImUNet
 )
-
+from .text2im_model2_1 import Text2ImUNet as Text2ImUNet2_1
+from .text2im_model2_1 import InpaintText2ImUNet as InpaintText2ImUNet2_1
 
 
 def create_model(
@@ -28,7 +29,9 @@ def create_model(
         in_channels,
         out_channels,
         up,
-        inpainting
+        inpainting,
+        version='2.0',
+        **kwargs
 ):
     if channel_mult == "":
         if image_size == 256:
@@ -46,11 +49,19 @@ def create_model(
     for res in attention_resolutions.split(","):
         attention_ds.append(image_size // int(res))
     if inpainting:
-        model_cls = InpaintText2ImUNet
-    elif up:
-        model_cls = SuperResText2ImUNet
+        if version == '2.0':
+            model_cls = InpaintText2ImUNet
+        elif version == '2.1':
+            model_cls = InpaintText2ImUNet2_1
+        else:
+            ValueError('Only 2.0 and 2.1 versions are available')
     else:
-        model_cls = Text2ImUNet
+        if version == '2.0':
+            model_cls = Text2ImUNet
+        elif version == '2.1':
+            model_cls = Text2ImUNet2_1
+        else:
+            ValueError('Only 2.0 and 2.1 versions are available')
     return model_cls(
         in_channels=in_channels,
         model_channels=num_channels,
@@ -70,6 +81,7 @@ def create_model(
         text_encoder_in_dim1=text_encoder_in_dim1,
         text_encoder_in_dim2=text_encoder_in_dim2,
         pooling_type=pooling_type,
+        **kwargs
     )
 
 
@@ -84,8 +96,10 @@ def create_gaussian_diffusion(
         rescale_timesteps=False,
         rescale_learned_sigmas=False,
         timestep_respacing="",
+        linear_start=0.0001,
+        linear_end=0.02
 ):
-    betas = get_named_beta_schedule(noise_schedule, steps)
+    betas = get_named_beta_schedule(noise_schedule, steps, linear_start=linear_start, linear_end=linear_end)
     if use_kl:
         loss_type = gd.LossType.RESCALED_KL
     elif rescale_learned_sigmas:

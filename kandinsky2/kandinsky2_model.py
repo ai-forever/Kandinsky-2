@@ -11,6 +11,7 @@ from copy import deepcopy
 import torch.nn.functional as F
 import numpy as np
 from .utils import prepare_image, q_sample, process_images, prepare_mask
+from .model.samplers import DDIMSampler, PLMSSampler
 
 
 class Kandinsky2:
@@ -83,7 +84,7 @@ class Kandinsky2:
 
     @torch.no_grad()
     def generate_img(self, prompt, batch_size=1,
-                     diffusion=None,
+                     diffusion=None, num_steps=50,
                      guidance_scale=7, progress=True, dynamic_threshold_v=99.5,
                      denoised_type='dynamic_threshold', init_step=None, noise=None,
                      init_img=None, img_mask=None, h=512, w=512, sampler='ddim_sampler', ddim_eta=0.8,
@@ -120,59 +121,72 @@ class Kandinsky2:
             cond_eps, uncond_eps = torch.split(eps, len(eps) // 2, dim=0)
             half_eps = uncond_eps + guidance_scale * (cond_eps - uncond_eps)
             eps = torch.cat([half_eps, half_eps], dim=0)
-            return torch.cat([eps, rest], dim=1)
-
-        def denoised_fn(x_start, ):
-            if denoised_type == 'dynamic_threshold':
-                x2 = torch.clone(x_start).cpu().detach().numpy()
-                p = dynamic_threshold_v
-                s = np.percentile(
-                    np.abs(x2), p,
-                    axis=tuple(range(1, x2.ndim)))[0]
-                s = max(s, 1.0)
-                x_start = torch.clip(x_start, -s, s) / s
-            elif denoised_type == 'clip_denoised':
-                x_start = x_start.clamp(-1, 1)
-            return (
-                    x_start * (1 - img_mask)
-                    + init_img * img_mask
-            )
-
+            if sampler == 'p_sampler':
+                return torch.cat([eps, rest], dim=1)
+            else:
+                return eps
+        
         if self.task_type == 'inpainting':
+            def denoised_fn(x_start, ):
+                if denoised_type == 'dynamic_threshold':
+                    x2 = torch.clone(x_start).cpu().detach().numpy()
+                    p = dynamic_threshold_v
+                    s = np.percentile(
+                        np.abs(x2), p,
+                        axis=tuple(range(1, x2.ndim)))[0]
+                    s = max(s, 1.0)
+                    x_start = torch.clip(x_start, -s, s) / s
+                elif denoised_type == 'clip_denoised':
+                    x_start = x_start.clamp(-1, 1)
+                return (
+                        x_start * (1 - img_mask)
+                        + init_img * img_mask
+                )
+
             denoised_function = denoised_fn
         else:
+            def denoised_fn(x, ):
+                if denoised_type=='dynamic_threshold':
+                    x2 = torch.clone(x).cpu().detach().numpy()
+                    p = dynamic_threshold_v
+                    s = np.percentile(
+                        np.abs(x2), p,
+                        axis=tuple(range(1, x2.ndim)))[0]
+                    s = max(s, 1.0)
+                    x = torch.clip(x, -s, s) / s
+                    return x
+                elif denoised_type == 'clip_denoised':
+                    return x.clamp(-1, 1)
+                return x
             denoised_function = None
-        self.model.del_cache()
         if sampler == 'p_sampler':
+            self.model.del_cache()
             samples = diffusion.p_sample_loop(
                 model_fn,
                 (full_batch_size, 4, new_h, new_w),
                 device=self.device,
-                denoised_type=denoised_type,
-                dynamic_threshold_v=dynamic_threshold_v,
                 noise=noise,
                 progress=progress,
                 model_kwargs=model_kwargs,
                 init_step=init_step,
                 denoised_fn=denoised_function,
-            )[:batch_size]
-        elif sampler == 'ddim_sampler':
-            samples = diffusion.ddim_sample_loop(
-                model_fn,
-                (full_batch_size, 4, new_h, new_w),
-                device=self.device,
-                denoised_type=denoised_type,
-                dynamic_threshold_v=dynamic_threshold_v,
-                noise=noise,
-                progress=progress,
-                model_kwargs=model_kwargs,
-                init_step=init_step,
-                denoised_fn=denoised_function,
-                eta=ddim_eta
-            )[:batch_size]
+            )[:batch_size] 
+            self.model.del_cache()
         else:
-            raise ValueError('Only p_sampler and ddim_sampler is available')
-        self.model.del_cache()
+            if sampler == 'ddim_sampler':
+                sampler = DDIMSampler(model=model_fn, old_diffusion=diffusion, schedule="linear", )
+            elif sampler == 'plms_sampler':
+                sampler = PLMSSampler(model=model_fn, old_diffusion=diffusion, schedule="linear", )
+            else:
+                raise ValueError('Only p_sampler, ddim_sampler and plms_sampler is available')
+            self.model.del_cache()
+            
+            if sampler == 'ddim_sampler':
+                samples, _ = sampler.sample(num_steps, batch_size*2, (4, new_h, new_w), conditioning=model_kwargs, x_T=noise, init_step=init_step, eta=ddim_eta)
+            else:
+                samples, _ = sampler.sample(num_steps, batch_size*2, (4, new_h, new_w), conditioning=model_kwargs, x_T=noise, init_step=init_step)
+            self.model.del_cache()
+            samples = samples[:batch_size]
         if self.use_image_enc:
             if self.use_fp16:
                 samples = samples.half()
@@ -186,12 +200,11 @@ class Kandinsky2:
                           dynamic_threshold_v=99.5, denoised_type='dynamic_threshold', h=512, w=512
                           , sampler='ddim_sampler', ddim_eta=0.05):
         config = deepcopy(self.config)
-        config['diffusion_config']['timestep_respacing'] = str(num_steps)
-        if sampler == 'ddim_sampler':
-            config['diffusion_config']['timestep_respacing'] = 'ddim' + config['diffusion_config']['timestep_respacing']
+        if sampler == 'p_sampler':
+            config['diffusion_config']['timestep_respacing'] = str(num_steps)
         diffusion = create_gaussian_diffusion(**config['diffusion_config'])
         return self.generate_img(prompt=prompt, batch_size=batch_size,
-                                 diffusion=diffusion,
+                                 diffusion=diffusion, num_steps=num_steps,
                                  guidance_scale=guidance_scale, progress=progress,
                                  dynamic_threshold_v=dynamic_threshold_v, denoised_type=denoised_type,
                                  h=h, w=w, sampler=sampler, ddim_eta=ddim_eta)
@@ -203,9 +216,8 @@ class Kandinsky2:
                          , sampler='ddim_sampler', ddim_eta=0.05):
 
         config = deepcopy(self.config)
-        config['diffusion_config']['timestep_respacing'] = str(num_steps)
-        if sampler == 'ddim_sampler':
-            config['diffusion_config']['timestep_respacing'] = 'ddim' + config['diffusion_config']['timestep_respacing']
+        if sampler == 'p_sampler':
+            config['diffusion_config']['timestep_respacing'] = str(num_steps)
         diffusion = create_gaussian_diffusion(**config['diffusion_config'])
         image = prepare_image(pil_img).to(self.device)
         if self.use_fp16:
@@ -217,7 +229,7 @@ class Kandinsky2:
                          num_steps=config['diffusion_config']['steps'])
         image = image.repeat(2, 1, 1, 1)
         return self.generate_img(prompt=prompt, batch_size=1,
-                                 diffusion=diffusion, noise=image,
+                                 diffusion=diffusion, noise=image, num_steps=num_steps,
                                  guidance_scale=guidance_scale, progress=progress,
                                  dynamic_threshold_v=dynamic_threshold_v, denoised_type=denoised_type,
                                  init_step=start_step, sampler=sampler, ddim_eta=ddim_eta)
@@ -228,9 +240,8 @@ class Kandinsky2:
                             dynamic_threshold_v=99.5, denoised_type='dynamic_threshold',
                             sampler='ddim_sampler', ddim_eta=0.05):
         config = deepcopy(self.config)
-        config['diffusion_config']['timestep_respacing'] = str(num_steps)
-        if sampler == 'ddim_sampler':
-            config['diffusion_config']['timestep_respacing'] = 'ddim' + config['diffusion_config']['timestep_respacing']
+        if sampler == 'p_sampler':
+            config['diffusion_config']['timestep_respacing'] = str(num_steps)
         diffusion = create_gaussian_diffusion(**config['diffusion_config'])
         image = prepare_image(pil_img).to(self.device)
         if self.use_fp16:
@@ -247,7 +258,7 @@ class Kandinsky2:
         image = image.repeat(2, 1, 1, 1)
         img_mask = img_mask.repeat(2, 1, 1, 1)
         return self.generate_img(prompt=prompt, batch_size=1,
-                                 diffusion=diffusion,
+                                 diffusion=diffusion, num_steps=num_steps,
                                  guidance_scale=guidance_scale, progress=progress,
                                  dynamic_threshold_v=dynamic_threshold_v, denoised_type=denoised_type,
                                  init_img=image, img_mask=img_mask, sampler=sampler, ddim_eta=ddim_eta )

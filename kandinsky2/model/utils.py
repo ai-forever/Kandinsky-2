@@ -65,4 +65,3 @@ def dict_keys(d, keys):
 
 def return_images(bath):
     scaled = ((batch + 1) * 127.5).round().clamp(0, 255).to(torch.uint8).cpu()
-
