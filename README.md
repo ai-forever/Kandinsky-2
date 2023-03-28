@@ -5,9 +5,9 @@
 
 [Habr post](https://habr.com/ru/company/sberbank/blog/725282/)
 
-`pip install "git+https://github.com/ai-forever/Kandinsky-2.1.git"`
-
 [Demo](https://fusionbrain.ai/diffusion)
+
+`pip install "git+https://github.com/ai-forever/Kandinsky-2.1.git"`
 
 ## Model architecture:
 
