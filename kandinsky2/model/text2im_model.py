@@ -11,17 +11,15 @@ from .text_encoders import AttentionPooling
 
 
 class Text2ImUNet(UNetModel):
-
     def __init__(
-            self,
-            model_dim,
-            text_encoder_in_dim1=1024,
-            text_encoder_in_dim2=640,
-            pooling_type='attention_pooling',  # ['from_model', 'attention_pooling']
-            *args,
-            cache_text_emb=True,
-            **kwargs,
-
+        self,
+        model_dim,
+        text_encoder_in_dim1=1024,
+        text_encoder_in_dim2=640,
+        pooling_type="attention_pooling",  # ['from_model', 'attention_pooling']
+        *args,
+        cache_text_emb=True,
+        **kwargs,
     ):
         self.model_dim = model_dim
         super().__init__(*args, **kwargs, encoder_channels=model_dim)
@@ -29,10 +27,12 @@ class Text2ImUNet(UNetModel):
 
         self.to_model_dim = nn.Linear(text_encoder_in_dim1, model_dim)
 
-        if self.pooling_type == 'from_model':
+        if self.pooling_type == "from_model":
             self.proj = nn.Linear(text_encoder_in_dim2, self.model_channels * 4)
-        elif self.pooling_type == 'attention_pooling':
-            self.proj = AttentionPooling(8, text_encoder_in_dim2, self.model_channels * 4)
+        elif self.pooling_type == "attention_pooling":
+            self.proj = AttentionPooling(
+                8, text_encoder_in_dim2, self.model_channels * 4
+            )
         self.proj2 = AttentionPooling(8, 512, self.model_channels * 4)
         self.to_model_dim2 = nn.Linear(512, model_dim)
         self.ln_model1 = nn.LayerNorm(model_dim)
@@ -51,17 +51,23 @@ class Text2ImUNet(UNetModel):
         self.ln_model2.to(torch.float16)
         self.ln_model3.to(torch.float16)
 
-    def get_text_emb(self, full_emb1=None, pooled_emb1=None, full_emb2=None, pooled_emb2=None):
+    def get_text_emb(
+        self, full_emb1=None, pooled_emb1=None, full_emb2=None, pooled_emb2=None
+    ):
         if self.cache is not None and self.cache_text_emb:
             return self.cache
-        if self.pooling_type == 'from_model':
+        if self.pooling_type == "from_model":
             xf_proj = self.proj(pooled_emb1)
-        elif self.pooling_type == 'attention_pooling':
+        elif self.pooling_type == "attention_pooling":
             xf_proj = self.proj(full_emb1)
         xf_proj = self.ln_model2(xf_proj)
-        pooled_emb2 = self.ln_model3(self.  proj2(full_emb2))
+        pooled_emb2 = self.ln_model3(self.proj2(full_emb2))
         xf_proj += pooled_emb2
-        xf_out = self.ln_model1(torch.cat([self.to_model_dim(full_emb1), self.to_model_dim2(full_emb2)], dim=1))
+        xf_out = self.ln_model1(
+            torch.cat(
+                [self.to_model_dim(full_emb1), self.to_model_dim2(full_emb2)], dim=1
+            )
+        )
 
         xf_out = xf_out.permute(0, 2, 1)  # NLC -> NCL
         outputs = dict(xf_proj=xf_proj, xf_out=xf_out)
@@ -73,11 +79,23 @@ class Text2ImUNet(UNetModel):
     def del_cache(self):
         self.cache = None
 
-    def forward(self, x, timesteps, full_emb1=None, pooled_emb1=None, full_emb2=None, pooled_emb2=None):
+    def forward(
+        self,
+        x,
+        timesteps,
+        full_emb1=None,
+        pooled_emb1=None,
+        full_emb2=None,
+        pooled_emb2=None,
+    ):
         hs = []
         emb = self.time_embed(timestep_embedding(timesteps, self.model_channels))
-        text_outputs = self.get_text_emb(full_emb1=full_emb1, pooled_emb1=pooled_emb1, full_emb2=full_emb2,
-                                         pooled_emb2=pooled_emb2)
+        text_outputs = self.get_text_emb(
+            full_emb1=full_emb1,
+            pooled_emb1=pooled_emb1,
+            full_emb2=full_emb2,
+            pooled_emb2=pooled_emb2,
+        )
         xf_proj, xf_out = text_outputs["xf_proj"], text_outputs["xf_out"]
         emb = emb + xf_proj.to(emb)
         h = x.type(self.dtype)

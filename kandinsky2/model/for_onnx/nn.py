@@ -21,6 +21,8 @@ def update_ema(target_params, source_params, rate=0.99):
         targ.detach().mul_(rate).add_(src, alpha=1 - rate)
 
     return target_params
+
+
 class GroupNorm32(nn.GroupNorm):
     def __init__(self, num_groups, num_channels, swish, eps=1e-5):
         super().__init__(num_groups=num_groups, num_channels=num_channels, eps=eps)
@@ -108,7 +110,9 @@ def timestep_embedding(timesteps, dim, max_period=10000):
     """
     half = dim // 2
     freqs = torch.exp(
-        -math.log(max_period) * torch.arange(start=0, end=half, dtype=torch.float32) / half
+        -math.log(max_period)
+        * torch.arange(start=0, end=half, dtype=torch.float32)
+        / half
     ).to(device=timesteps.device)
     c_dtype = timesteps.dtype
     args = timesteps[:, None].float() * freqs[None]

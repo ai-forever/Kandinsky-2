@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import importlib
 
+
 def _extract_into_tensor(arr, timesteps, broadcast_shape):
     """
     Extract values from a 1-D numpy array for a batch of indices.
@@ -18,6 +19,7 @@ def _extract_into_tensor(arr, timesteps, broadcast_shape):
     while len(res.shape) < len(broadcast_shape):
         res = res[..., None]
     return res.expand(broadcast_shape)
+
 
 def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
     """
@@ -43,6 +45,7 @@ def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
         )
     else:
         raise NotImplementedError(f"unknown beta schedule: {schedule_name}")
+
 
 def mean_flat(tensor):
     """

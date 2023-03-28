@@ -58,7 +58,7 @@ def master_params_to_model_params(model_params, master_params):
     model_params = list(model_params)
 
     for param, master_param in zip(
-            model_params, unflatten_master_params(model_params, master_params)
+        model_params, unflatten_master_params(model_params, master_params)
     ):
         param.detach().copy_(master_param)
 
