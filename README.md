@@ -8,7 +8,7 @@
 
 [Demo](https://fusionbrain.ai/diffusion)
 
-`pip install "git+https://github.com/ai-forever/Kandinsky-2.1.git"`
+`pip install "git+https://github.com/ai-forever/Kandinsky-2.git"`
 
 ## Model architecture:
 
