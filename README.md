@@ -19,7 +19,7 @@ As text and image encoder it uses CLIP model and diffusion prior (mapping) betwe
 
 For diffusion mapping of latent spaces we use transformer with num_layers=20, num_heads=32 and hidden_size=2048.
 
-Other architecture parts:
+**Other architecture parts:**
 
 + Text encoder (XLM-Roberta-Large-Vit-L-14) - 560M
 + Diffusion Prior — 1B
@@ -116,11 +116,11 @@ In terms of diffusion architecture Kandinsky 2.0 implements UNet with 1.2B param
 
 ![](./content/NatallE.png)
 
-# How to use:
+## How to use:
  
  Check our jupyter notebooks with examples in `./notebooks` folder
  
-## 1. text2img
+### 1. text2img
 
 ```python
 from kandinsky2 import get_kandinsky2
@@ -132,7 +132,7 @@ images = model.generate_text2img('A teddy bear на красной площад�
 
 prompt: "A teddy bear на красной площади"
 
-## 2. inpainting
+### 2. inpainting
 ```python 
 from kandinsky2 import get_kandinsky2
 from PIL import Image
@@ -149,7 +149,7 @@ images = model.generate_inpainting('Девушка в красном плать�
 
 prompt: "Девушка в красном платье"
 
-## 3. img2img
+### 3. img2img
 ```python
 from kandinsky2 import get_kandinsky2
 from PIL import Image
