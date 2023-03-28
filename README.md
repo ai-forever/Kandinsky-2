@@ -10,6 +10,8 @@
 
 ## Model architecture:
 
+![](./content/kandisky21.png)
+
 Kandinsky 2.1 inherits best practicies from DallE-2.0 and Latent diffucion, while introducing some new ideas.
 
 As text and image encoder it uses CLIP model and diffusion prior (mapping) between latetnt spaces of CLIP modalities. This approach increases the visual performance of the model and unveils new horizons in blending images and text-guided image manipulation.
@@ -45,6 +47,10 @@ images = model.generate_text2img('''red cat, 4k photo''', num_steps=100,
                            prior_steps="5",)
 ```
 
+![](./content/einstein.png)
+
+prompt: "Einstein in space around the logarithm scheme"
+
 ### 2. image fuse
 
 ```python
@@ -77,6 +83,8 @@ images = model.generate_inpainting('man 4k photo', init_image, mask,
                           sampler='p_sampler', prior_cf_scale=4,
                           prior_steps="5")
 ```
+
+![](./content/fuse.png)
 
 # Kandinsky 2.0
 
