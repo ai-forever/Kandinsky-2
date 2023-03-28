@@ -7,6 +7,7 @@ import importlib
 from .model.utils import get_named_beta_schedule, _extract_into_tensor
 from copy import deepcopy
 
+
 def prepare_mask(mask):
     mask = mask.float()[0]
     old_mask = deepcopy(mask)
@@ -26,7 +27,8 @@ def prepare_mask(mask):
                 mask[:, i, j + 1] = 0
             if i != mask.shape[1] - 1 and j != mask.shape[2] - 1:
                 mask[:, i + 1, j + 1] = 0
-    return mask.unsqueeze(0)          
+    return mask.unsqueeze(0)
+
 
 def prepare_image(pil_image, w=512, h=512):
     pil_image = pil_image.resize((w, h), resample=Image.BICUBIC, reducing_gap=1)
@@ -37,8 +39,7 @@ def prepare_image(pil_image, w=512, h=512):
     return image
 
 
-
-def q_sample(x_start, t, schedule_name='linear', num_steps=1000, noise=None):
+def q_sample(x_start, t, schedule_name="linear", num_steps=1000, noise=None):
     betas = get_named_beta_schedule(schedule_name, num_steps)
     alphas = 1.0 - betas
     alphas_cumprod = np.cumprod(alphas, axis=0)
@@ -48,14 +49,21 @@ def q_sample(x_start, t, schedule_name='linear', num_steps=1000, noise=None):
         noise = torch.randn_like(x_start)
     assert noise.shape == x_start.shape
     return (
-            _extract_into_tensor(sqrt_alphas_cumprod, t, x_start.shape) * x_start
-            + _extract_into_tensor(sqrt_one_minus_alphas_cumprod, t, x_start.shape)
-            * noise
+        _extract_into_tensor(sqrt_alphas_cumprod, t, x_start.shape) * x_start
+        + _extract_into_tensor(sqrt_one_minus_alphas_cumprod, t, x_start.shape) * noise
     )
 
 
 def process_images(batch):
-    scaled = ((batch + 1) * 127.5).round().clamp(0, 255).to(torch.uint8).to('cpu').permute(0, 2, 3, 1).numpy()
+    scaled = (
+        ((batch + 1) * 127.5)
+        .round()
+        .clamp(0, 255)
+        .to(torch.uint8)
+        .to("cpu")
+        .permute(0, 2, 3, 1)
+        .numpy()
+    )
     images = []
     for i in range(scaled.shape[0]):
         images.append(Image.fromarray(scaled[i]))

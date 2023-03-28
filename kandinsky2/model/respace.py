@@ -3,17 +3,23 @@ import torch
 
 from .gaussian_diffusion import GaussianDiffusion
 
+
 def make_ddim_timesteps(ddim_discr_method, num_ddim_timesteps, num_ddpm_timesteps):
-    if ddim_discr_method == 'uniform':
+    if ddim_discr_method == "uniform":
         c = num_ddpm_timesteps // num_ddim_timesteps
         ddim_timesteps = np.asarray(list(range(0, num_ddpm_timesteps, c)))
-    elif ddim_discr_method == 'quad':
-        ddim_timesteps = ((np.linspace(0, np.sqrt(num_ddpm_timesteps * .8), num_ddim_timesteps)) ** 2).astype(int)
+    elif ddim_discr_method == "quad":
+        ddim_timesteps = (
+            (np.linspace(0, np.sqrt(num_ddpm_timesteps * 0.8), num_ddim_timesteps)) ** 2
+        ).astype(int)
     else:
-        raise NotImplementedError(f'There is no ddim discretization method called "{ddim_discr_method}"')
+        raise NotImplementedError(
+            f'There is no ddim discretization method called "{ddim_discr_method}"'
+        )
 
     steps_out = ddim_timesteps + 1
     return steps_out
+
 
 def space_timesteps(num_timesteps, section_counts):
     """
@@ -36,7 +42,11 @@ def space_timesteps(num_timesteps, section_counts):
     """
     if isinstance(section_counts, str):
         if section_counts.startswith("ddim"):
-            return set(make_ddim_timesteps('uniform', int(section_counts[len("ddim"):]), num_timesteps))
+            return set(
+                make_ddim_timesteps(
+                    "uniform", int(section_counts[len("ddim") :]), num_timesteps
+                )
+            )
         section_counts = [int(x) for x in section_counts.split(",")]
     size_per = num_timesteps // len(section_counts)
     extra = num_timesteps % len(section_counts)
@@ -87,12 +97,12 @@ class SpacedDiffusion(GaussianDiffusion):
         super().__init__(**kwargs)
 
     def p_mean_variance(
-            self, model, *args, **kwargs
+        self, model, *args, **kwargs
     ):  # pylint: disable=signature-differs
         return super().p_mean_variance(self._wrap_model(model), *args, **kwargs)
 
     def training_losses(
-            self, model, *args, **kwargs
+        self, model, *args, **kwargs
     ):  # pylint: disable=signature-differs
         return super().training_losses(self._wrap_model(model), *args, **kwargs)
 

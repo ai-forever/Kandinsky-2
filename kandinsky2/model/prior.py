@@ -10,6 +10,8 @@ from .model_creation import create_gaussian_diffusion
 import clip
 
 from clip.simple_tokenizer import SimpleTokenizer, default_bpe
+
+
 def timestep_embedding(timesteps, dim, max_period=10000):
     """
     Create sinusoidal timestep embeddings.
@@ -30,6 +32,8 @@ def timestep_embedding(timesteps, dim, max_period=10000):
     if dim % 2:
         embedding = th.cat([embedding, th.zeros_like(embedding[:, :1])], dim=-1)
     return embedding
+
+
 '''
 class LayerNorm(nn.LayerNorm):
     """
@@ -39,6 +43,8 @@ class LayerNorm(nn.LayerNorm):
     def forward(self, x: th.Tensor):
         return super().forward(x.float()).to(x.dtype)
 '''
+
+
 class LayerNorm(nn.LayerNorm):
     """
     Implementation that supports fp16 inputs but fp32 gains/biases.
@@ -46,7 +52,8 @@ class LayerNorm(nn.LayerNorm):
 
     def forward(self, x: th.Tensor):
         return super().forward(x).to(x.dtype)
-    
+
+
 class MultiheadAttention(nn.Module):
     def __init__(self, n_ctx, width, heads):
         super().__init__()
@@ -230,7 +237,9 @@ class PriorTransformer(nn.Module):
         text_enc = text_enc.to(self.text_enc_proj.weight.dtype)
         bsz = x.shape[0]
         mask = F.pad(mask, (0, self.ext_len), value=True)
-        t_emb = self.time_embed(timestep_embedding(timesteps, self.xf_width).to(x.dtype))
+        t_emb = self.time_embed(
+            timestep_embedding(timesteps, self.xf_width).to(x.dtype)
+        )
         text_enc = self.text_enc_proj(text_enc)
         text_emb = self.text_emb_proj(text_emb)
         x = self.clip_img_proj(x)
@@ -259,7 +268,8 @@ class PriorTransformer(nn.Module):
         out = self.out_proj(out[:, -1])
 
         return out
-    
+
+
 class PriorDiffusionModel(torch.nn.Module):
     def __init__(self, config, tokenizer, clip_mean, clip_std):
         super().__init__()
@@ -301,10 +311,10 @@ class PriorDiffusionModel(torch.nn.Module):
 
     def set_cf_text_tensor(self):
         return self._tokenizer.padded_tokens_and_mask([""], self.model.text_ctx)
-    
+
     def create_prior_diffusion(self):
         return create_gaussian_diffusion(**self._diffusion_kwargs)
-    
+
     def get_sample_fn(self, timestep_respacing):
         use_ddim = timestep_respacing.startswith(("ddim", "fast"))
 
@@ -372,6 +382,7 @@ class PriorDiffusionModel(torch.nn.Module):
         sample = (sample * self.clip_std) + self.clip_mean
 
         return sample[:bsz]
+
 
 class CustomizedTokenizer(SimpleTokenizer):
     def __init__(self):

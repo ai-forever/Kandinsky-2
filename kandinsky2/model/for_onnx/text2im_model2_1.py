@@ -8,34 +8,38 @@ import math
 from abc import abstractmethod
 from ..fp16_util import convert_module_to_f16, convert_module_to_f32
 from ..text_encoders import AttentionPooling
+
+
 class Text2ImUNet(UNetModel):
-
     def __init__(
-            self,
-            model_dim,
-            image_encoder_in_dim=768,
-            text_encoder_in_dim1=1024,
-            text_encoder_in_dim2=768,
-            num_image_embs=10,
-            pooling_type='attention_pooling',  # ['from_model', 'attention_pooling']
-            *args,
-            cache_text_emb=True,
-            **kwargs,
-
+        self,
+        model_dim,
+        image_encoder_in_dim=768,
+        text_encoder_in_dim1=1024,
+        text_encoder_in_dim2=768,
+        num_image_embs=10,
+        pooling_type="attention_pooling",  # ['from_model', 'attention_pooling']
+        *args,
+        cache_text_emb=True,
+        **kwargs,
     ):
         self.model_dim = model_dim
         super().__init__(*args, **kwargs, encoder_channels=model_dim)
         self.pooling_type = pooling_type
-        
+
         self.num_image_embs = num_image_embs
-        self.clip_to_seq = nn.Linear(image_encoder_in_dim, model_dim * self.num_image_embs)
-        
+        self.clip_to_seq = nn.Linear(
+            image_encoder_in_dim, model_dim * self.num_image_embs
+        )
+
         self.to_model_dim_n = nn.Linear(text_encoder_in_dim1, model_dim)
-        
-        if self.pooling_type == 'from_model':
+
+        if self.pooling_type == "from_model":
             self.proj_n = nn.Linear(text_encoder_in_dim2, self.model_channels * 4)
-        elif self.pooling_type == 'attention_pooling':
-            self.proj_n = AttentionPooling(8, text_encoder_in_dim1, self.model_channels * 4)
+        elif self.pooling_type == "attention_pooling":
+            self.proj_n = AttentionPooling(
+                8, text_encoder_in_dim1, self.model_channels * 4
+            )
         self.ln_model_n = nn.LayerNorm(self.model_channels * 4)
         self.img_layer = nn.Linear(image_encoder_in_dim, self.model_channels * 4)
         self.cache_text_emb = cache_text_emb
@@ -53,14 +57,16 @@ class Text2ImUNet(UNetModel):
     def get_text_emb(self, full_emb=None, pooled_emb=None, image_emb=None):
         if self.cache is not None and self.cache_text_emb:
             return self.cache
-        
-        clip_seq = self.clip_to_seq(image_emb).reshape(image_emb.shape[0], self.num_image_embs, self.model_dim)
-        
-        if self.pooling_type == 'from_model':
+
+        clip_seq = self.clip_to_seq(image_emb).reshape(
+            image_emb.shape[0], self.num_image_embs, self.model_dim
+        )
+
+        if self.pooling_type == "from_model":
             xf_proj = self.proj_n(pooled_emb)
-        elif self.pooling_type == 'attention_pooling':
+        elif self.pooling_type == "attention_pooling":
             xf_proj = self.proj_n(full_emb)
-            
+
         xf_proj = self.ln_model_n(xf_proj)
         if image_emb is not None:
             xf_proj = xf_proj + self.img_layer(image_emb)
@@ -79,7 +85,9 @@ class Text2ImUNet(UNetModel):
     def forward(self, x, timesteps, full_emb, pooled_emb, image_emb):
         hs = []
         emb = self.time_embed(timestep_embedding(timesteps, self.model_channels))
-        text_outputs = self.get_text_emb(full_emb=full_emb, pooled_emb=pooled_emb, image_emb=image_emb)
+        text_outputs = self.get_text_emb(
+            full_emb=full_emb, pooled_emb=pooled_emb, image_emb=image_emb
+        )
         xf_proj, xf_out = text_outputs["xf_proj"], text_outputs["xf_out"]
         emb = emb.detach() + xf_proj.to(emb).detach()
         h = x
@@ -118,7 +126,8 @@ class SuperResText2ImUNet(Text2ImUNet):
         )
         x = torch.cat([x, upsampled], dim=1)
         return super().forward(x, timesteps, **kwargs)
-    
+
+
 class InpaintText2ImUNet(Text2ImUNet):
     """
     A text2im model which can perform inpainting.
