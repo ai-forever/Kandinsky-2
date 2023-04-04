@@ -34,7 +34,7 @@ Kandinsky 2.1 was trained on a large-scale image-text dataset LAION HighRes and 
  For use with CUDA:
  1. Install torch (https://pytorch.org/get-started/locally/)
  2. Install opencv: `pip install opencv-python`
- 3. Install Kadinsky: `pip install "git+https://github.com/ai-forever/Kandinsky-2.git"`
+ 3. Install Kandinsky: `pip install "git+https://github.com/ai-forever/Kandinsky-2.git"`
 
 ## How to use:
 
