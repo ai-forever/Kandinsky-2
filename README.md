@@ -8,8 +8,6 @@
 
 [Demo](https://fusionbrain.ai/diffusion)
 
-`pip install "git+https://github.com/ai-forever/Kandinsky-2.git"`
-
 ## Model architecture:
 
 ![](./content/kandinsky21.png)
@@ -31,6 +29,12 @@ For diffusion mapping of latent spaces we use transformer with num_layers=20, nu
 
 Kandinsky 2.1 was trained on a large-scale image-text dataset LAION HighRes and fine-tuned on our internal datasets.
 
+
+## Installation
+ For use with CUDA:
+ 1. Install torch (https://pytorch.org/get-started/locally/)
+ 2. Install opencv: `pip install opencv-python`
+ 3. Install Kadinsky: `pip install "git+https://github.com/ai-forever/Kandinsky-2.git"`
 
 ## How to use:
 
