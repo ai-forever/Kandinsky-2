@@ -1,5 +1,5 @@
 import os
-from huggingface_hub import hf_hub_url, hf_hub_download
+from huggingface_hub import hf_hub_download
 from copy import deepcopy
 from omegaconf.dictconfig import DictConfig
 
