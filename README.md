@@ -8,7 +8,11 @@
 
 [Demo](https://fusionbrain.ai/diffusion)
 
-`pip install "git+https://github.com/ai-forever/Kandinsky-2.git"`
+```
+pip install opencv-python
+pip install git+https://github.com/openai/CLIP.git
+pip install git+https://github.com/ai-forever/Kandinsky-2.git
+```
 
 ## Model architecture:
 
