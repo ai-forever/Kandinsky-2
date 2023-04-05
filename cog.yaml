@@ -1,0 +1,28 @@
+# Configuration for Cog ⚙️
+# Reference: https://github.com/replicate/cog/blob/main/docs/yaml.md
+
+build:
+  gpu: true
+  cuda: "11.6"
+  python_version: "3.10"
+  system_packages:
+    - "libgl1-mesa-glx"
+    - "libglib2.0-0"
+  python_packages:
+    - "torch==1.13.1"
+    - "sentencepiece==0.1.97"
+    - "accelerate==0.16.0"
+    - "Pillow==9.5.0"
+    - "attrs==22.2.0"
+    - "opencv-python==4.7.0.72"
+    - git+https://github.com/openai/CLIP.git
+    - "tqdm==4.65.0"
+    - "ftfy==6.1.1"
+    - "blobfile==2.0.1"
+    - "transformers==4.23.1"
+    - "torchvision==0.14.1"
+    - "omegaconf==2.3.0"
+    - "pytorch_lightning==2.0.1"
+    - "einops==0.6.0"
+  
+predict: "predict.py:Predictor"

@@ -2,6 +2,7 @@
 
 [![Framework: PyTorch](https://img.shields.io/badge/Framework-PyTorch-orange.svg)](https://pytorch.org/) [![Huggingface space](https://img.shields.io/badge/🤗-Huggingface-yello.svg)](https://huggingface.co/sberbank-ai/Kandinsky_2.1)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1xSbu-b-EwYd6GdaFPRVgvXBX_mciZ41e?usp=sharing)
+[![Replicate](https://replicate.com/cjwbw/kandinsky-2/badge)](https://replicate.com/cjwbw/kandinsky-2) 
 
 
 [Habr post](https://habr.com/ru/company/sberbank/blog/725282/)
