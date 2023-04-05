@@ -42,11 +42,16 @@ Kandinsky 2.1 was trained on a large-scale image-text dataset LAION HighRes and 
 ```python
 from kandinsky2 import get_kandinsky2
 model = get_kandinsky2('cuda', task_type='text2img', model_version='2.1', use_flash_attention=False)
-images = model.generate_text2img('''red cat, 4k photo''', num_steps=100,
-                          batch_size=1, guidance_scale=4,
-                           h=768, w=768,
-                           sampler='p_sampler', prior_cf_scale=4,
-                           prior_steps="5",)
+images = model.generate_text2img(
+    "red cat, 4k photo", 
+    num_steps=100,
+    batch_size=1, 
+    guidance_scale=4,
+    h=768, w=768,
+    sampler='p_sampler', 
+    prior_cf_scale=4,
+    prior_steps="5"
+)
 ```
 
 ![](./content/einstein.png)
@@ -59,12 +64,19 @@ prompt: "Einstein in space around the logarithm scheme"
 from kandinsky2 import get_kandinsky2
 from PIL import Image
 model = get_kandinsky2('cuda', task_type='text2img', model_version='2.1', use_flash_attention=False)
-images_texts = ['red cat', Image.open('img1.jpg'), Image.open('img2.jpg'), 'a man']; weights = [0.25, 0.25, 0.25, 0.25]
-images = model.mix_images(images_texts, weights, num_steps=150,
-                          batch_size=1, guidance_scale=5,
-                         h=768, w=768,
-       sampler='p_sampler', prior_cf_scale=4,
-       prior_steps="5", negative_decoder_prompt='')
+images_texts = ['red cat', Image.open('img1.jpg'), Image.open('img2.jpg'), 'a man']
+weights = [0.25, 0.25, 0.25, 0.25]
+images = model.mix_images(
+    images_texts, 
+    weights, 
+    num_steps=150,
+    batch_size=1, 
+    guidance_scale=5,
+    h=768, w=768,
+    sampler='p_sampler', 
+    prior_cf_scale=4,
+    prior_steps="5"
+)
 ```
 
 ![](./content/fuse.png)
@@ -79,13 +91,19 @@ import numpy as np
 model = get_kandinsky2('cuda', task_type='inpainting', model_version='2.1', use_flash_attention=False)
 init_image = Image.open('img.jpg')
 mask = np.ones((768, 768), dtype=np.float32)
-mask[:550] =  0
-images = model.generate_inpainting('man 4k photo', init_image, mask, 
-                          num_steps=150,
-                          batch_size=1, guidance_scale=5,
-                          h=768, w=768,
-                          sampler='p_sampler', prior_cf_scale=4,
-                          prior_steps="5")
+mask[:,:550] =  0
+images = model.generate_inpainting(
+    'man 4k photo', 
+    init_image, 
+    mask, 
+    num_steps=150,
+    batch_size=1, 
+    guidance_scale=5,
+    h=768, w=768,
+    sampler='p_sampler', 
+    prior_cf_scale=4,
+    prior_steps="5"
+)
 ```
 
 
