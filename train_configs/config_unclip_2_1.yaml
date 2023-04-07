@@ -49,8 +49,7 @@ diffusion_config:
   rescale_learned_sigmas: true
   linear_start: 0.00085
   linear_end: 0.012
-#bitsandbytes.optim.Adam8bit
-#transformers.Adafactor
+
 optim_params:
     name: transformers.Adafactor
     params:
@@ -61,7 +60,7 @@ optim_params:
 image_enc_params:
     name: MOVQ
     scale: 1
-    ckpt_path: 'cene655/kandinsky2_test/movq_final.ckpt'
+    ckpt_path:
     params:
         embed_dim: 4
         n_embed: 16384
