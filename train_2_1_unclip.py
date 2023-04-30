@@ -18,6 +18,8 @@ from kandinsky2.train_utils.trainer_2_1_uclip import train_unclip
 from kandinsky2.model.resample import UniformSampler
 from omegaconf import OmegaConf
 import clip
+import argparse
+
 def drop_first_layer(path):
     d = {}
     state_dict = torch.load(path)
@@ -27,7 +29,10 @@ def drop_first_layer(path):
     return d
 
 def main():
-    config = OmegaConf.load('')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config', type=str, help='config path')
+    args = parser.parse_args()
+    config = OmegaConf.load(args.config)
     device = config['device']
     model = create_model(**config['model_config'])
     diffusion = create_gaussian_diffusion(**config['diffusion_config'])
