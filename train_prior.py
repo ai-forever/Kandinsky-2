@@ -14,19 +14,15 @@ from kandinsky2.model.utils import get_obj_from_str
 from kandinsky2.train_utils.trainer_prior import train_prior
 from kandinsky2.model.resample import UniformSampler
 from kandinsky2.model.prior import PriorDiffusionModel, CustomizedTokenizer
-
+import argparse
 from omegaconf import OmegaConf
 import clip
-def drop_first_layer(path):
-    d = {}
-    state_dict = torch.load(path)
-    for key in state_dict.keys():
-        if key != 'input_blocks.0.0.weight':
-            d[key] = state_dict[key]
-    return d
 
 def main():
-    config = OmegaConf.load('')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config', type=str, help='config path')
+    args = parser.parse_args()
+    config = OmegaConf.load(args.config)
     device = config['device']
     clip_mean, clip_std = torch.load(
             config["clip_mean_std_path"], map_location="cpu"
