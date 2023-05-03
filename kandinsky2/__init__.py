@@ -1,5 +1,5 @@
 import os
-from huggingface_hub import hf_hub_url, cached_download
+from huggingface_hub import hf_hub_download
 from copy import deepcopy
 from omegaconf.dictconfig import DictConfig
 
@@ -17,22 +17,20 @@ def get_kandinsky2_0(
     cache_dir = os.path.join(cache_dir, "2_0")
     config = deepcopy(CONFIG_2_0)
     if task_type == "inpainting":
+        repo_id = "sberbank-ai/Kandinsky_2.0"
         model_name = "Kandinsky-2-0-inpainting.pt"
-        config_file_url = hf_hub_url(repo_id="sberbank-ai/Kandinsky_2.0", filename=model_name)
     elif task_type == "text2img":
+        repo_id = "sberbank-ai/Kandinsky_2.0"
         model_name = "Kandinsky-2-0.pt"
-        config_file_url = hf_hub_url(repo_id="sberbank-ai/Kandinsky_2.0", filename=model_name)
     else:
         raise ValueError("Only text2img, img2img and inpainting is available")
 
-    cached_download(
-        config_file_url,
-        cache_dir=cache_dir,
-        force_filename=model_name,
+    hf_hub_download(
+        repo_id, model_name,
+        local_dir=cache_dir,
         use_auth_token=use_auth_token,
     )
 
-    cache_dir_text_en1 = os.path.join(cache_dir, "text_encoder1")
     for name in [
         "config.json",
         "pytorch_model.bin",
@@ -41,15 +39,12 @@ def get_kandinsky2_0(
         "tokenizer.json",
         "tokenizer_config.json",
     ]:
-        config_file_url = hf_hub_url(repo_id="sberbank-ai/Kandinsky_2.0", filename=f"text_encoder1/{name}")
-        cached_download(
-            config_file_url,
-            cache_dir=cache_dir_text_en1,
-            force_filename=name,
+        hf_hub_download(
+            repo_id, f"text_encoder1/{name}",
+            local_dir=cache_dir,
             use_auth_token=use_auth_token,
         )
 
-    cache_dir_text_en2 = os.path.join(cache_dir, "text_encoder2")
     for name in [
         "config.json",
         "pytorch_model.bin",
@@ -57,21 +52,20 @@ def get_kandinsky2_0(
         "special_tokens_map.json",
         "tokenizer_config.json",
     ]:
-        config_file_url = hf_hub_url(repo_id="sberbank-ai/Kandinsky_2.0", filename=f"text_encoder2/{name}")
-        cached_download(
-            config_file_url,
-            cache_dir=cache_dir_text_en2,
-            force_filename=name,
+        hf_hub_download(
+            repo_id, f"text_encoder2/{name}",
+            local_dir=cache_dir,
             use_auth_token=use_auth_token,
         )
-    
-    config_file_url = hf_hub_url(repo_id="sberbank-ai/Kandinsky_2.0", filename="vae.ckpt")
-    cached_download(
-        config_file_url,
-        cache_dir=cache_dir,
-        force_filename="vae.ckpt",
+
+    hf_hub_download(
+        repo_id, "vae.ckpt",
+        local_dir=cache_dir,
         use_auth_token=use_auth_token,
     )
+
+    cache_dir_text_en1 = os.path.join(cache_dir, "text_encoder1")
+    cache_dir_text_en2 = os.path.join(cache_dir, "text_encoder2")
 
     config["text_enc_params1"]["model_path"] = cache_dir_text_en1
     config["text_enc_params2"]["model_path"] = cache_dir_text_en2
@@ -97,27 +91,23 @@ def get_kandinsky2_1(
     config = DictConfig(deepcopy(CONFIG_2_1))
     config["model_config"]["use_flash_attention"] = use_flash_attention
     if task_type == "text2img":
+        repo_id = "sberbank-ai/Kandinsky_2.1"
         model_name = "decoder_fp16.ckpt"
-        config_file_url = hf_hub_url(repo_id="sberbank-ai/Kandinsky_2.1", filename=model_name)
     elif task_type == "inpainting":
+        repo_id = "sberbank-ai/Kandinsky_2.1"
         model_name = "inpainting_fp16.ckpt"
-        config_file_url = hf_hub_url(repo_id="sberbank-ai/Kandinsky_2.1", filename=model_name)
-    cached_download(
-        config_file_url,
-        cache_dir=cache_dir,
-        force_filename=model_name,
+    hf_hub_download(
+        repo_id, model_name,
+        local_dir=cache_dir,
         use_auth_token=use_auth_token,
     )
     prior_name = "prior_fp16.ckpt"
-    config_file_url = hf_hub_url(repo_id="sberbank-ai/Kandinsky_2.1", filename=prior_name)
-    cached_download(
-        config_file_url,
-        cache_dir=cache_dir,
-        force_filename=prior_name,
+    hf_hub_download(
+        repo_id, prior_name,
+        local_dir=cache_dir,
         use_auth_token=use_auth_token,
     )
 
-    cache_dir_text_en = os.path.join(cache_dir, "text_encoder")
     for name in [
         "config.json",
         "pytorch_model.bin",
@@ -126,29 +116,25 @@ def get_kandinsky2_1(
         "tokenizer.json",
         "tokenizer_config.json",
     ]:
-        config_file_url = hf_hub_url(repo_id="sberbank-ai/Kandinsky_2.1", filename=f"text_encoder/{name}")
-        cached_download(
-            config_file_url,
-            cache_dir=cache_dir_text_en,
-            force_filename=name,
+        hf_hub_download(
+            repo_id, f"text_encoder/{name}",
+            local_dir=cache_dir,
             use_auth_token=use_auth_token,
         )
 
-    config_file_url = hf_hub_url(repo_id="sberbank-ai/Kandinsky_2.1", filename="movq_final.ckpt")
-    cached_download(
-        config_file_url,
+    hf_hub_download(
+        repo_id, "movq_final.ckpt",
         cache_dir=cache_dir,
-        force_filename="movq_final.ckpt",
         use_auth_token=use_auth_token,
     )
 
-    config_file_url = hf_hub_url(repo_id="sberbank-ai/Kandinsky_2.1", filename="ViT-L-14_stats.th")
-    cached_download(
-        config_file_url,
+    hf_hub_download(
+        repo_id, "ViT-L-14_stats.th",
         cache_dir=cache_dir,
-        force_filename="ViT-L-14_stats.th",
         use_auth_token=use_auth_token,
     )
+
+    cache_dir_text_en = os.path.join(cache_dir, "text_encoder")
 
     config["tokenizer_name"] = cache_dir_text_en
     config["text_enc_params"]["model_path"] = cache_dir_text_en
