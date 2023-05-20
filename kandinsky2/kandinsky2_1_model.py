@@ -263,12 +263,14 @@ class Kandinsky2_1:
                     model=model_fn,
                     old_diffusion=diffusion,
                     schedule="linear",
+                    device=self.device,
                 )
             elif sampler == "plms_sampler":
                 sampler = PLMSSampler(
                     model=model_fn,
                     old_diffusion=diffusion,
                     schedule="linear",
+                    device=self.device,
                 )
             else:
                 raise ValueError("Only ddim_sampler and plms_sampler is available")
