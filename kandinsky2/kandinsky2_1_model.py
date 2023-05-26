@@ -196,6 +196,8 @@ class Kandinsky2_1:
         w=512,
         sampler="ddim_sampler",
         num_steps=50,
+        callback=None,
+
     ):
         new_h, new_w = self.get_new_h_w(h, w)
         full_batch_size = batch_size * 2
@@ -253,6 +255,8 @@ class Kandinsky2_1:
                 model_kwargs=model_kwargs,
                 init_step=init_step,
                 denoised_fn=denoised_fun,
+                callback=callback
+
             )[:batch_size]
             self.model.del_cache()
         else:
@@ -279,6 +283,8 @@ class Kandinsky2_1:
                 conditioning=model_kwargs,
                 x_T=noise,
                 init_step=init_step,
+                img_callback=callback
+
             )
             self.model.del_cache()
             samples = samples[:batch_size]
