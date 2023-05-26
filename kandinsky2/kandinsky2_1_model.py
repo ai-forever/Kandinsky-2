@@ -371,6 +371,7 @@ class Kandinsky2_1:
         prior_steps="25",
         negative_prior_prompt="",
         negative_decoder_prompt="",
+        callback=None,
     ):
         assert len(images_texts) == len(weights) and len(images_texts) > 0
         
@@ -428,6 +429,7 @@ class Kandinsky2_1:
             sampler=sampler,
             num_steps=num_steps,
             diffusion=diffusion,
+            callback=callback
         )
 
     @torch.no_grad()
@@ -444,6 +446,7 @@ class Kandinsky2_1:
         sampler="ddim_sampler",
         prior_cf_scale=4,
         prior_steps="25",
+        callback=None
     ):
         # generate clip embeddings
         image_emb = self.generate_clip_emb(
@@ -487,6 +490,7 @@ class Kandinsky2_1:
             diffusion=diffusion,
             noise=image,
             init_step=start_step,
+            callback=callback
         )
 
     @torch.no_grad()
