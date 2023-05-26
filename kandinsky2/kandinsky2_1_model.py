@@ -197,7 +197,6 @@ class Kandinsky2_1:
         sampler="ddim_sampler",
         num_steps=50,
         callback=None,
-
     ):
         new_h, new_w = self.get_new_h_w(h, w)
         full_batch_size = batch_size * 2
@@ -256,7 +255,6 @@ class Kandinsky2_1:
                 init_step=init_step,
                 denoised_fn=denoised_fun,
                 callback=callback
-
             )[:batch_size]
             self.model.del_cache()
         else:
@@ -316,6 +314,7 @@ class Kandinsky2_1:
         prior_steps="25",
         negative_prior_prompt="",
         negative_decoder_prompt="",
+        callback=None,
     ):
         # generate clip embeddings
         image_emb = self.generate_clip_emb(
@@ -354,6 +353,7 @@ class Kandinsky2_1:
             sampler=sampler,
             num_steps=num_steps,
             diffusion=diffusion,
+            callback=callback
         )
 
     @torch.no_grad()

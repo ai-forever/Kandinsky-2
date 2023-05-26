@@ -392,6 +392,7 @@ class GaussianDiffusion:
         device=None,
         progress=False,
         init_step=None,
+        callback=None
     ):
         """
         Generate samples from the model.
@@ -420,6 +421,7 @@ class GaussianDiffusion:
             device=device,
             progress=progress,
             init_step=init_step,
+            callback=callback
         ):
             final = sample
         return final["sample"]
@@ -435,6 +437,7 @@ class GaussianDiffusion:
         device=None,
         progress=False,
         init_step=None,
+        callback=None
     ):
         """
         Generate samples from the model and yield intermediate samples from
@@ -473,6 +476,9 @@ class GaussianDiffusion:
                 )
                 yield out
                 img = out["sample"]
+                print(dir(out))
+                if callback is not None:
+                    callback({"i":i, "denoised":img})
 
     def ddim_sample(
         self,
