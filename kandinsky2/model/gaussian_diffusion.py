@@ -476,7 +476,6 @@ class GaussianDiffusion:
                 )
                 yield out
                 img = out["sample"]
-                print(dir(out))
                 if callback is not None:
                     callback({"i":i, "denoised":img})
 
