@@ -47,7 +47,8 @@ class Kandinsky2:
         )
 
         self.use_fp16 = self.config["model_config"]["use_fp16"]
-
+        if self.device in [torch.device('mps'), torch.device('cpu')]:
+            self.use_fp16 = False
         if self.config["image_enc_params"] is not None:
             self.use_image_enc = True
             self.scale = self.config["image_enc_params"]["scale"]
@@ -65,7 +66,7 @@ class Kandinsky2:
             
         self.config["model_config"]["cache_text_emb"] = True
         self.model = create_model(**self.config["model_config"])
-        self.model.load_state_dict(torch.load(model_path), strict=False)
+        self.model.load_state_dict(torch.load(model_path, map_location=self.device), strict=False)
         if self.use_fp16:
             self.model.convert_to_fp16()
             self.text_encoder1 = self.text_encoder1.half()
