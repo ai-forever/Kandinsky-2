@@ -80,7 +80,7 @@ class Kandinsky2_1:
             elif self.config["image_enc_params"]["name"] == "MOVQ":
                 self.image_encoder = MOVQ(**self.config["image_enc_params"]["params"])
                 self.image_encoder.load_state_dict(
-                    torch.load(self.config["image_enc_params"]["ckpt_path"])
+                    torch.load(self.config["image_enc_params"]["ckpt_path"], map_location=self.device)
                 )
             self.image_encoder.eval()
         else:
@@ -88,7 +88,7 @@ class Kandinsky2_1:
             
         self.config["model_config"]["cache_text_emb"] = True
         self.model = create_model(**self.config["model_config"])
-        self.model.load_state_dict(torch.load(model_path))
+        self.model.load_state_dict(torch.load(model_path, map_location=self.device))
         if self.use_fp16:
             self.model.convert_to_fp16()
             self.image_encoder = self.image_encoder.half()
