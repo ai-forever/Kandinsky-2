@@ -248,6 +248,8 @@ class Kandinsky2_1:
 
         def model_fn(x_t, ts, **kwargs):
             half = x_t[: len(x_t) // 2]
+            x_t = x_t.detach().cpu()
+            del x_t
             combined = torch.cat([half, half], dim=0)
             if not self.use_fp16:
                 combined = combined.to(dtype=torch.float32)
@@ -257,9 +259,18 @@ class Kandinsky2_1:
             cond_eps, uncond_eps = torch.split(eps, len(eps) // 2, dim=0)
             half_eps = uncond_eps + guidance_scale * (cond_eps - uncond_eps)
             eps = torch.cat([half_eps, half_eps], dim=0)
+
+            half_eps = half_eps.detach().to("cpu")
+            cond_eps = cond_eps.detach().to("cpu")
+            del half_eps
+            del cond_eps
+
+
             if sampler == "p_sampler":
                 return torch.cat([eps, rest], dim=1)
             else:
+                rest = rest.detach().to("cpu")
+                del rest
                 return eps
 
         if noise is not None:
