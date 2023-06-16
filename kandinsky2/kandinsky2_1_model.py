@@ -57,7 +57,7 @@ class Kandinsky2_1:
             clip_mean,
             clip_std,
         )
-        self.prior.load_state_dict(torch.load(prior_path, map_location=self.device), strict=False)
+        self.prior.load_state_dict(torch.load(prior_path, map_location="cpu"), strict=False)
         if self.use_fp16:
             self.prior = self.prior.half()
         self.text_encoder = TextEncoder(**self.config["text_enc_params"])
@@ -65,7 +65,7 @@ class Kandinsky2_1:
             self.text_encoder = self.text_encoder.half()
 
         self.clip_model, self.preprocess = clip.load(
-            config["clip_name"], device=self.device, jit=False
+            config["clip_name"], device="cpu", jit=False
         )
         self.clip_model.eval()
 
@@ -91,7 +91,7 @@ class Kandinsky2_1:
 
         self.config["model_config"]["cache_text_emb"] = True
         self.model = create_model(**self.config["model_config"])
-        self.model.load_state_dict(torch.load(model_path, map_location=self.device))
+        self.model.load_state_dict(torch.load(model_path, map_location="cpu"))
         if self.use_fp16:
             self.model.convert_to_fp16()
             self.image_encoder = self.image_encoder.half()
@@ -99,13 +99,12 @@ class Kandinsky2_1:
             self.model_dtype = torch.float16
         else:
             self.model_dtype = torch.float32
-        print(self.device)
-        print("KANDINSKY PRECISION", self.model_dtype)
-        self.image_encoder = self.image_encoder.to(self.device).eval()
-        self.text_encoder = self.text_encoder.to(self.device).eval()
-        self.prior = self.prior.to(self.device).eval()
-        self.model.eval()
-        self.model.to(self.device)
+
+        self.image_encoder = self.image_encoder.eval().to("cpu")# .to(self.device).eval()
+        self.text_encoder = self.text_encoder.eval().to("cpu")#.to(self.device).eval()
+        self.prior = self.prior.eval().to("cpu")#.to(self.device).eval()
+        self.model = self.model.eval().to("cpu")
+        #self.model.to(self.device)
 
     def get_new_h_w(self, h, w):
         new_h = h // 64
@@ -153,6 +152,7 @@ class Kandinsky2_1:
         cf_token, cf_mask = self.tokenizer2.padded_tokens_and_mask(
             [negative_prior_prompt], max_txt_length
         )
+
         if not (cf_token.shape == tok.shape):
             cf_token = cf_token.expand(tok.shape[0], -1)
             cf_mask = cf_mask.expand(tok.shape[0], -1)
@@ -169,6 +169,8 @@ class Kandinsky2_1:
         txt_feat_seq = x
         txt_feat = (x[torch.arange(x.shape[0]), tok.argmax(dim=-1)] @ self.clip_model.text_projection)
         txt_feat, txt_feat_seq = txt_feat.float().to(self.device), txt_feat_seq.float().to(self.device)
+        self.prior = self.prior.to(self.device)
+
         img_feat = self.prior(
             txt_feat,
             txt_feat_seq,
@@ -176,6 +178,8 @@ class Kandinsky2_1:
             prior_cf_scales_batch,
             timestep_respacing=prior_steps,
         )
+        self.prior = self.prior.to("cpu")
+
         return img_feat.to(self.model_dtype)
 
     @torch.no_grad()
@@ -210,12 +214,17 @@ class Kandinsky2_1:
             init_img = init_img.half()
         if img_mask is not None and self.use_fp16:
             img_mask = img_mask.half()
+        self.text_encoder.to(self.device)
         model_kwargs["full_emb"], model_kwargs["pooled_emb"] = self.encode_text(
             text_encoder=self.text_encoder,
             tokenizer=self.tokenizer1,
             prompt=prompt,
             batch_size=batch_size,
         )
+
+        self.text_encoder.to("cpu")
+
+
         model_kwargs["image_emb"] = img_prompt
 
         if self.task_type == "inpainting":
@@ -249,7 +258,7 @@ class Kandinsky2_1:
         else:
             def denoised_fun(x):
                 return x.clamp(-2, 2)
-
+        self.model.to(self.device)
         if sampler == "p_sampler":
             self.model.del_cache()
             samples = diffusion.p_sample_loop(
@@ -293,11 +302,15 @@ class Kandinsky2_1:
             )
             self.model.del_cache()
             samples = samples[:batch_size]
+        self.model.to("cpu")
 
         if self.use_image_enc:
             if self.use_fp16:
                 samples = samples.half()
+            self.image_encoder.to(self.device)
             samples = self.image_encoder.decode(samples / self.scale)
+            self.image_encoder.to("cpu")
+
 
         samples = samples[:, :, :h, :w]
         return process_images(samples)
@@ -324,6 +337,7 @@ class Kandinsky2_1:
             callback=None,
     ):
         # generate clip embeddings
+        self.clip_model.to(self.device)
         image_emb = self.generate_clip_emb(
             prompt,
             batch_size=batch_size,
@@ -341,6 +355,7 @@ class Kandinsky2_1:
                 prior_steps=prior_steps,
                 negative_prior_prompt=negative_prior_prompt,
             )
+        self.clip_model.to("cpu")
 
         image_emb = torch.cat([image_emb, zero_image_emb], dim=0).to(self.device)
 
