@@ -1,4 +1,5 @@
 # Kandinsky 2.2
+(will be soon)
 
 [Habr post](https://habr.com/ru/companies/sberbank/articles/747446/)
 
