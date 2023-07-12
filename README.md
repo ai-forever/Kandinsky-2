@@ -31,8 +31,6 @@ The addition of the ControlNet mechanism allows the model to effectively control
 
 ## Model architecture:
 
-![](./content/kandinsky21.png)
-
 <p align="center">
 <img src="./content/kandinsky21" width="80%">
 </p>
