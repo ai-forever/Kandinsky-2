@@ -1,3 +1,14 @@
+# Kandinsky 2.2
+
+[Habr post](https://habr.com/ru/companies/sberbank/articles/747446/)
+
+[Demo fusionbrain.ai](https://fusionbrain.ai/diffusion)
+
+[Telegram-bot](https://t.me/kandinsky21_bot)
+
+
+
+
 # Kandinsky 2.1
 
 [![Framework: PyTorch](https://img.shields.io/badge/Framework-PyTorch-orange.svg)](https://pytorch.org/) [![Huggingface space](https://img.shields.io/badge/🤗-Huggingface-yello.svg)](https://huggingface.co/sberbank-ai/Kandinsky_2.1)
