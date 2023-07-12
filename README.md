@@ -1,5 +1,4 @@
 # Kandinsky 2.2
-(will be soon)
 
 [Habr post](https://habr.com/ru/companies/sberbank/articles/747446/)
 
@@ -7,7 +6,7 @@
 
 [Telegram-bot](https://t.me/kandinsky21_bot)
 
-
+(will be soon)
 
 
 # Kandinsky 2.1
