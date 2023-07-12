@@ -4,6 +4,7 @@ from PIL import Image
 import torch
 import torch.nn as nn
 import importlib
+import platform
 
 
 def _extract_into_tensor(arr, timesteps, broadcast_shape):
@@ -36,7 +37,7 @@ def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
         beta_start = scale * 0.0001
         beta_end = scale * 0.02
         return np.linspace(
-            beta_start, beta_end, num_diffusion_timesteps, dtype=np.float64
+            beta_start, beta_end, num_diffusion_timesteps, dtype=np.float32
         )
     elif schedule_name == "cosine":
         return betas_for_alpha_bar(

@@ -14,6 +14,25 @@ from .nn import (
     timestep_embedding,
     zero_module,
 )
+import platform
+
+def get_torch_device():
+    if "macOS" in platform.platform():
+        if torch.backends.mps.is_available():
+            return torch.device("mps")
+        else:
+            return torch.device("cpu")
+    else:
+        if torch.cuda.is_available():
+            return torch.device(torch.cuda.current_device())
+        else:
+            return torch.device("cpu")
+
+device = get_torch_device()
+
+
+if device in [torch.device('mps') or torch.device('cpu')]:
+    dt = torch.float32
 
 
 class TimestepBlock(nn.Module):
@@ -35,6 +54,10 @@ class TimestepEmbedSequential(nn.Sequential, TimestepBlock):
     """
 
     def forward(self, x, emb, encoder_out=None):
+        if device in [torch.device('mps') or torch.device('cpu')]:
+            if x.dtype != dt:
+                x = x.to(dt)
+        #x = x.float()
         for layer in self:
             if isinstance(layer, TimestepBlock):
                 x = layer(x, emb)

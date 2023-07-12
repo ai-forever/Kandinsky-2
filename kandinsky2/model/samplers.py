@@ -6,7 +6,21 @@ import numpy as np
 from einops import repeat
 from tqdm import tqdm
 from functools import partial
+import platform
 
+def get_torch_device():
+    if "macOS" in platform.platform():
+        if torch.backends.mps.is_available():
+            return torch.device("mps")
+        else:
+            return torch.device("cpu")
+    else:
+        if torch.cuda.is_available():
+            return torch.device(torch.cuda.current_device())
+        else:
+            return torch.device("cpu")
+
+device = get_torch_device()
 
 def apply_init_step(timesteps, init_step=None):
     if init_step is None:
@@ -75,8 +89,8 @@ class DDIMSampler(object):
 
     def register_buffer(self, name, attr):
         if type(attr) == torch.Tensor:
-            if attr.device != torch.device("cuda"):
-                attr = attr.to(torch.device("cuda"))
+            if attr.device != device:
+                attr = attr.to(device)
         setattr(self, name, attr)
 
     def make_schedule(
@@ -98,7 +112,7 @@ class DDIMSampler(object):
         assert (
             alphas_cumprod.shape[0] == self.ddpm_num_timesteps
         ), "alphas have to be defined for each timestep"
-        to_torch = lambda x: x.clone().detach().to(torch.float32).to("cuda")
+        to_torch = lambda x: x.clone().detach().to(torch.float32).to(device)
 
         self.register_buffer(
             "betas", to_torch(torch.from_numpy(self.old_diffusion.betas))
@@ -223,7 +237,6 @@ class DDIMSampler(object):
         unconditional_guidance_scale=1.0,
         unconditional_conditioning=None,
     ):
-        device = "cuda"
         b = shape[0]
         if x_T is None:
             img = torch.randn(shape, device=device)
@@ -278,7 +291,7 @@ class DDIMSampler(object):
             if callback:
                 callback(i)
             if img_callback:
-                img_callback(pred_x0, i)
+                img_callback({"i": i, "denoised": img, "x":pred_x0})
 
             if index % log_every_t == 0 or index == total_steps - 1:
                 intermediates["x_inter"].append(img)
@@ -341,8 +354,8 @@ class PLMSSampler(object):
 
     def register_buffer(self, name, attr):
         if type(attr) == torch.Tensor:
-            if attr.device != torch.device("cuda"):
-                attr = attr.to(torch.device("cuda"))
+            if attr.device != device:
+                attr = attr.to(device)
         setattr(self, name, attr)
 
     def make_schedule(
@@ -366,7 +379,7 @@ class PLMSSampler(object):
         assert (
             alphas_cumprod.shape[0] == self.ddpm_num_timesteps
         ), "alphas have to be defined for each timestep"
-        to_torch = lambda x: x.clone().detach().to(torch.float32).to("cuda")
+        to_torch = lambda x: x.clone().detach().to(torch.float32).to(device)
 
         self.register_buffer(
             "betas", to_torch(torch.from_numpy(self.old_diffusion.betas))
@@ -492,7 +505,6 @@ class PLMSSampler(object):
         unconditional_guidance_scale=1.0,
         unconditional_conditioning=None,
     ):
-        device = "cuda"
         b = shape[0]
         if x_T is None:
             img = torch.randn(shape, device=device)
@@ -560,7 +572,7 @@ class PLMSSampler(object):
             if callback:
                 callback(i)
             if img_callback:
-                img_callback(pred_x0, i)
+                img_callback({"i": i, "denoised": img, "x":pred_x0})
 
             if index % log_every_t == 0 or index == total_steps - 1:
                 intermediates["x_inter"].append(img)

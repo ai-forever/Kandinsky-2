@@ -12,8 +12,21 @@ from transformers import (
 )
 import transformers
 import os
+import platform
 
+def get_torch_device():
+    if "macOS" in platform.platform():
+        if torch.backends.mps.is_available():
+            return torch.device("mps")
+        else:
+            return torch.device("cpu")
+    else:
+        if torch.cuda.is_available():
+            return torch.device(torch.cuda.current_device())
+        else:
+            return torch.device("cpu")
 
+device = get_torch_device()
 def attention(q, k, v, d_k):
     scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(d_k)
     scores = F.softmax(scores, dim=-1)
@@ -128,20 +141,21 @@ class TextEncoder(nn.Module):
         self.model_name = model_name
         if self.model_name == "clip":
             self.model = ImagenCLIP()
-            self.model.load_state_dict(torch.load(model_path))
+            self.model.load_state_dict(torch.load(model_path, map_location=device))
         elif self.model_name == "T5EncoderModel":
-            self.model = T5EncoderModel.from_pretrained(model_path)
+            self.model = T5EncoderModel.from_pretrained(model_path, map_location=device)
         elif self.model_name == "MT5EncoderModel":
-            self.model = MT5EncoderModel.from_pretrained(model_path)
+            self.model = MT5EncoderModel.from_pretrained(model_path, map_location=device)
         elif self.model_name == "BertModel":
-            self.model = BertModel.from_pretrained(model_path)
+            self.model = BertModel.from_pretrained(model_path, map_location=device)
         elif self.model_name == "multiclip":
             self.model = MultilingualCLIP(model_path, **kwargs)
             self.model.load_state_dict(
-                torch.load(os.path.join(model_path, "pytorch_model.bin")), strict=False
+                torch.load(os.path.join(model_path, "pytorch_model.bin"), map_location=device), strict=False
             )
         elif self.model_name == "xlm_roberta":
-            self.model = XLMRobertaModel.from_pretrained(model_path).half()
+            if device not in [torch.device('mps'), torch.device('cpu')]:
+                self.model = XLMRobertaModel.from_pretrained(model_path).half()
         self.model.eval()
         for param in self.model.parameters():
             param.requires_grad = False

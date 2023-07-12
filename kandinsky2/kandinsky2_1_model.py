@@ -19,18 +19,22 @@ from .utils import prepare_image, q_sample, process_images, prepare_mask
 
 
 class Kandinsky2_1:
-    
+
     def __init__(
-        self, 
-        config, 
-        model_path, 
-        prior_path, 
-        device, 
-        task_type="text2img"
+            self,
+            config,
+            model_path,
+            prior_path,
+            device,
+            task_type="text2img"
     ):
         self.config = config
-        self.device = device
+        b_device = device
+        self.device = "cpu"
+
         self.use_fp16 = self.config["model_config"]["use_fp16"]
+        if self.device in [torch.device('mps'), torch.device('cpu')]:
+            self.use_fp16 = False
         self.task_type = task_type
         self.clip_image_size = config["clip_image_size"]
         if task_type == "text2img":
@@ -54,17 +58,17 @@ class Kandinsky2_1:
             clip_mean,
             clip_std,
         )
-        self.prior.load_state_dict(torch.load(prior_path), strict=False)
+        self.prior.load_state_dict(torch.load(prior_path, map_location="cpu"), strict=False)
         if self.use_fp16:
-            self.prior = self.prior.half()
+            self.prior.half()# = self.prior.half()
         self.text_encoder = TextEncoder(**self.config["text_enc_params"])
         if self.use_fp16:
-            self.text_encoder = self.text_encoder.half()
+            self.text_encoder.half()# = self.text_encoder.half()
 
         self.clip_model, self.preprocess = clip.load(
-            config["clip_name"], device=self.device, jit=False
+            config["clip_name"], device="cpu", jit=False
         )
-        self.clip_model.eval()
+        #self.clip_model.eval()
 
         if self.config["image_enc_params"] is not None:
             self.use_image_enc = True
@@ -80,28 +84,40 @@ class Kandinsky2_1:
             elif self.config["image_enc_params"]["name"] == "MOVQ":
                 self.image_encoder = MOVQ(**self.config["image_enc_params"]["params"])
                 self.image_encoder.load_state_dict(
-                    torch.load(self.config["image_enc_params"]["ckpt_path"])
+                    torch.load(self.config["image_enc_params"]["ckpt_path"], map_location='cpu')
                 )
-            self.image_encoder.eval()
+            #self.image_encoder.eval()
         else:
             self.use_image_enc = False
-            
+
         self.config["model_config"]["cache_text_emb"] = True
         self.model = create_model(**self.config["model_config"])
-        self.model.load_state_dict(torch.load(model_path))
+        self.model.load_state_dict(torch.load(model_path, map_location="cpu"))
         if self.use_fp16:
             self.model.convert_to_fp16()
-            self.image_encoder = self.image_encoder.half()
+            self.image_encoder.half()# = self.image_encoder.half()
 
             self.model_dtype = torch.float16
         else:
             self.model_dtype = torch.float32
-            
-        self.image_encoder = self.image_encoder.to(self.device).eval()
-        self.text_encoder = self.text_encoder.to(self.device).eval()
-        self.prior = self.prior.to(self.device).eval()
-        self.model.eval()
-        self.model.to(self.device)
+
+
+        self.clip_model.to("cpu")# = self.clip_model.to("cpu")
+        self.image_encoder.to("cpu")# = self.image_encoder.eval().to("cpu")# .to(self.device).eval()
+        self.text_encoder.to("cpu")# = self.text_encoder.eval().to("cpu")#.to(self.device).eval()
+        self.prior.to("cpu")# = self.prior.eval().to("cpu")#.to(self.device).eval()
+        self.model.to("cpu")# = self.model.eval().to("cpu")
+        self.device = b_device
+
+
+        del clip_mean
+        del clip_std
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
+
+        #self.model.to(self.device)
 
     def get_new_h_w(self, h, w):
         new_h = h // 64
@@ -132,12 +148,12 @@ class Kandinsky2_1:
 
     @torch.no_grad()
     def generate_clip_emb(
-        self,
-        prompt,
-        batch_size=1,
-        prior_cf_scale=4,
-        prior_steps="25",
-        negative_prior_prompt="",
+            self,
+            prompt,
+            batch_size=1,
+            prior_cf_scale=4,
+            prior_steps="25",
+            negative_prior_prompt="",
     ):
         prompts_batch = [prompt for _ in range(batch_size)]
         prior_cf_scales_batch = [prior_cf_scale] * len(prompts_batch)
@@ -149,6 +165,7 @@ class Kandinsky2_1:
         cf_token, cf_mask = self.tokenizer2.padded_tokens_and_mask(
             [negative_prior_prompt], max_txt_length
         )
+
         if not (cf_token.shape == tok.shape):
             cf_token = cf_token.expand(tok.shape[0], -1)
             cf_mask = cf_mask.expand(tok.shape[0], -1)
@@ -165,6 +182,8 @@ class Kandinsky2_1:
         txt_feat_seq = x
         txt_feat = (x[torch.arange(x.shape[0]), tok.argmax(dim=-1)] @ self.clip_model.text_projection)
         txt_feat, txt_feat_seq = txt_feat.float().to(self.device), txt_feat_seq.float().to(self.device)
+        self.prior = self.prior.to(self.device)
+
         img_feat = self.prior(
             txt_feat,
             txt_feat_seq,
@@ -172,6 +191,8 @@ class Kandinsky2_1:
             prior_cf_scales_batch,
             timestep_respacing=prior_steps,
         )
+        self.prior = self.prior.to("cpu")
+
         return img_feat.to(self.model_dtype)
 
     @torch.no_grad()
@@ -182,20 +203,21 @@ class Kandinsky2_1:
 
     @torch.no_grad()
     def generate_img(
-        self,
-        prompt,
-        img_prompt,
-        batch_size=1,
-        diffusion=None,
-        guidance_scale=7,
-        init_step=None,
-        noise=None,
-        init_img=None,
-        img_mask=None,
-        h=512,
-        w=512,
-        sampler="ddim_sampler",
-        num_steps=50,
+            self,
+            prompt,
+            img_prompt,
+            batch_size=1,
+            diffusion=None,
+            guidance_scale=7,
+            init_step=None,
+            noise=None,
+            init_img=None,
+            img_mask=None,
+            h=512,
+            w=512,
+            sampler="ddim_sampler",
+            num_steps=50,
+            callback=None,
     ):
         new_h, new_w = self.get_new_h_w(h, w)
         full_batch_size = batch_size * 2
@@ -205,12 +227,17 @@ class Kandinsky2_1:
             init_img = init_img.half()
         if img_mask is not None and self.use_fp16:
             img_mask = img_mask.half()
+        self.text_encoder = self.text_encoder.to(self.device)
         model_kwargs["full_emb"], model_kwargs["pooled_emb"] = self.encode_text(
             text_encoder=self.text_encoder,
             tokenizer=self.tokenizer1,
             prompt=prompt,
             batch_size=batch_size,
         )
+
+        self.text_encoder = self.text_encoder.to("cpu")
+
+
         model_kwargs["image_emb"] = img_prompt
 
         if self.task_type == "inpainting":
@@ -221,15 +248,29 @@ class Kandinsky2_1:
 
         def model_fn(x_t, ts, **kwargs):
             half = x_t[: len(x_t) // 2]
+            x_t = x_t.detach().cpu()
+            del x_t
             combined = torch.cat([half, half], dim=0)
+            if not self.use_fp16:
+                combined = combined.to(dtype=torch.float32)
+                ts = ts.to(dtype=torch.float32)
             model_out = self.model(combined, ts, **kwargs)
             eps, rest = model_out[:, :4], model_out[:, 4:]
             cond_eps, uncond_eps = torch.split(eps, len(eps) // 2, dim=0)
             half_eps = uncond_eps + guidance_scale * (cond_eps - uncond_eps)
             eps = torch.cat([half_eps, half_eps], dim=0)
+
+            half_eps = half_eps.detach().to("cpu")
+            cond_eps = cond_eps.detach().to("cpu")
+            del half_eps
+            del cond_eps
+
+
             if sampler == "p_sampler":
                 return torch.cat([eps, rest], dim=1)
             else:
+                rest = rest.detach().to("cpu")
+                del rest
                 return eps
 
         if noise is not None:
@@ -241,7 +282,7 @@ class Kandinsky2_1:
         else:
             def denoised_fun(x):
                 return x.clamp(-2, 2)
-
+        self.model = self.model.to(self.device)
         if sampler == "p_sampler":
             self.model.del_cache()
             samples = diffusion.p_sample_loop(
@@ -253,6 +294,7 @@ class Kandinsky2_1:
                 model_kwargs=model_kwargs,
                 init_step=init_step,
                 denoised_fn=denoised_fun,
+                callback=callback
             )[:batch_size]
             self.model.del_cache()
         else:
@@ -270,7 +312,7 @@ class Kandinsky2_1:
                 )
             else:
                 raise ValueError("Only ddim_sampler and plms_sampler is available")
-                
+
             self.model.del_cache()
             samples, _ = sampler.sample(
                 num_steps,
@@ -279,16 +321,31 @@ class Kandinsky2_1:
                 conditioning=model_kwargs,
                 x_T=noise,
                 init_step=init_step,
+                img_callback=callback
+
             )
             self.model.del_cache()
             samples = samples[:batch_size]
-            
+        self.model = self.model.to("cpu")
+
         if self.use_image_enc:
             if self.use_fp16:
                 samples = samples.half()
+            self.image_encoder.to(self.device)
             samples = self.image_encoder.decode(samples / self.scale)
-            
+            self.image_encoder = self.image_encoder.to("cpu")
+
+
         samples = samples[:, :, :h, :w]
+
+        del diffusion
+        del sampler
+        del noise
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
+
+
         return process_images(samples)
 
     @torch.no_grad()
@@ -298,20 +355,22 @@ class Kandinsky2_1:
 
     @torch.no_grad()
     def generate_text2img(
-        self,
-        prompt,
-        num_steps=100,
-        batch_size=1,
-        guidance_scale=7,
-        h=512,
-        w=512,
-        sampler="ddim_sampler",
-        prior_cf_scale=4,
-        prior_steps="25",
-        negative_prior_prompt="",
-        negative_decoder_prompt="",
+            self,
+            prompt,
+            num_steps=100,
+            batch_size=1,
+            guidance_scale=7,
+            h=512,
+            w=512,
+            sampler="ddim_sampler",
+            prior_cf_scale=4,
+            prior_steps="25",
+            negative_prior_prompt="",
+            negative_decoder_prompt="",
+            callback=None,
     ):
         # generate clip embeddings
+        self.clip_model = self.clip_model.to(self.device)
         image_emb = self.generate_clip_emb(
             prompt,
             batch_size=batch_size,
@@ -329,15 +388,16 @@ class Kandinsky2_1:
                 prior_steps=prior_steps,
                 negative_prior_prompt=negative_prior_prompt,
             )
+        self.clip_model = self.clip_model.to("cpu")
 
         image_emb = torch.cat([image_emb, zero_image_emb], dim=0).to(self.device)
-        
+
         # load diffusion
         config = deepcopy(self.config)
         if sampler == "p_sampler":
             config["diffusion_config"]["timestep_respacing"] = str(num_steps)
         diffusion = create_gaussian_diffusion(**config["diffusion_config"])
-        
+
         return self.generate_img(
             prompt=prompt,
             img_prompt=image_emb,
@@ -348,26 +408,28 @@ class Kandinsky2_1:
             sampler=sampler,
             num_steps=num_steps,
             diffusion=diffusion,
+            callback=callback
         )
 
     @torch.no_grad()
     def mix_images(
-        self,
-        images_texts,
-        weights,
-        num_steps=100,
-        batch_size=1,
-        guidance_scale=7,
-        h=512,
-        w=512,
-        sampler="ddim_sampler",
-        prior_cf_scale=4,
-        prior_steps="25",
-        negative_prior_prompt="",
-        negative_decoder_prompt="",
+            self,
+            images_texts,
+            weights,
+            num_steps=100,
+            batch_size=1,
+            guidance_scale=7,
+            h=512,
+            w=512,
+            sampler="ddim_sampler",
+            prior_cf_scale=4,
+            prior_steps="25",
+            negative_prior_prompt="",
+            negative_decoder_prompt="",
+            callback=None,
     ):
         assert len(images_texts) == len(weights) and len(images_texts) > 0
-        
+
         # generate clip embeddings
         image_emb = None
         for i in range(len(images_texts)):
@@ -393,7 +455,7 @@ class Kandinsky2_1:
                     )
                 else:
                     image_emb = image_emb + self.encode_images(images_texts[i], is_pil=True) * weights[i]
-                    
+
         image_emb = image_emb.repeat(batch_size, 1)
         if negative_decoder_prompt == "":
             zero_image_emb = self.create_zero_img_emb(batch_size=batch_size)
@@ -406,7 +468,7 @@ class Kandinsky2_1:
                 negative_prior_prompt=negative_prior_prompt,
             )
         image_emb = torch.cat([image_emb, zero_image_emb], dim=0).to(self.device)
-        
+
         # load diffusion
         config = deepcopy(self.config)
         if sampler == "p_sampler":
@@ -422,22 +484,24 @@ class Kandinsky2_1:
             sampler=sampler,
             num_steps=num_steps,
             diffusion=diffusion,
+            callback=callback
         )
 
     @torch.no_grad()
     def generate_img2img(
-        self,
-        prompt,
-        pil_img,
-        strength=0.7,
-        num_steps=100,
-        batch_size=1,
-        guidance_scale=7,
-        h=512,
-        w=512,
-        sampler="ddim_sampler",
-        prior_cf_scale=4,
-        prior_steps="25",
+            self,
+            prompt,
+            pil_img,
+            strength=0.7,
+            num_steps=100,
+            batch_size=1,
+            guidance_scale=7,
+            h=512,
+            w=512,
+            sampler="ddim_sampler",
+            prior_cf_scale=4,
+            prior_steps="25",
+            callback=None
     ):
         # generate clip embeddings
         image_emb = self.generate_clip_emb(
@@ -448,18 +512,18 @@ class Kandinsky2_1:
         )
         zero_image_emb = self.create_zero_img_emb(batch_size=batch_size)
         image_emb = torch.cat([image_emb, zero_image_emb], dim=0).to(self.device)
-        
+
         # load diffusion
         config = deepcopy(self.config)
         if sampler == "p_sampler":
             config["diffusion_config"]["timestep_respacing"] = str(num_steps)
         diffusion = create_gaussian_diffusion(**config["diffusion_config"])
-        
+
         image = prepare_image(pil_img, h=h, w=w).to(self.device)
         if self.use_fp16:
             image = image.half()
         image = self.image_encoder.encode(image) * self.scale
-        
+
         start_step = int(diffusion.num_timesteps * (1 - strength))
         image = q_sample(
             image,
@@ -467,7 +531,7 @@ class Kandinsky2_1:
             schedule_name=config["diffusion_config"]["noise_schedule"],
             num_steps=config["diffusion_config"]["steps"],
         )
-        
+
         image = image.repeat(2, 1, 1, 1)
         return self.generate_img(
             prompt=prompt,
@@ -481,24 +545,25 @@ class Kandinsky2_1:
             diffusion=diffusion,
             noise=image,
             init_step=start_step,
+            callback=callback
         )
 
     @torch.no_grad()
     def generate_inpainting(
-        self,
-        prompt,
-        pil_img,
-        img_mask,
-        num_steps=100,
-        batch_size=1,
-        guidance_scale=7,
-        h=512,
-        w=512,
-        sampler="ddim_sampler",
-        prior_cf_scale=4,
-        prior_steps="25",
-        negative_prior_prompt="",
-        negative_decoder_prompt="",
+            self,
+            prompt,
+            pil_img,
+            img_mask,
+            num_steps=100,
+            batch_size=1,
+            guidance_scale=7,
+            h=512,
+            w=512,
+            sampler="ddim_sampler",
+            prior_cf_scale=4,
+            prior_steps="25",
+            negative_prior_prompt="",
+            negative_decoder_prompt="",
     ):
         # generate clip embeddings
         image_emb = self.generate_clip_emb(
@@ -510,7 +575,7 @@ class Kandinsky2_1:
         )
         zero_image_emb = self.create_zero_img_emb(batch_size=batch_size)
         image_emb = torch.cat([image_emb, zero_image_emb], dim=0).to(self.device)
-        
+
         # load diffusion
         config = deepcopy(self.config)
         if sampler == "p_sampler":
@@ -532,7 +597,7 @@ class Kandinsky2_1:
             img_mask = img_mask.half()
         image = image.repeat(2, 1, 1, 1)
         img_mask = img_mask.repeat(2, 1, 1, 1)
-        
+
         return self.generate_img(
             prompt=prompt,
             img_prompt=image_emb,
