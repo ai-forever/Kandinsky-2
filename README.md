@@ -9,7 +9,7 @@
 [Telegram-bot](https://t.me/kandinsky21_bot)
 
 <p align="left">
-<img src="./content/kand_22.png" width="50%">
+<img src="./content/kand_22.png" width="60%">
 </p>
 
 Kandinsky 2.2 brings substantial improvements upon its predecessor, Kandinsky 2.1, by introducing a new, more powerful image encoder - CLIP-ViT-G and the ControlNet support.
