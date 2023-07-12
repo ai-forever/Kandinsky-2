@@ -8,6 +8,9 @@
 
 [Telegram-bot](https://t.me/kandinsky21_bot)
 
+Kandinsky 2.2 LORA
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1lUWfe4CWhPJhUZYjMAE7g4ciHX4764rN?usp=sharing)
+
 <p align="left">
 <img src="./content/kand_22.png" width="60%">
 </p>
