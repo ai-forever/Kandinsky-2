@@ -6,7 +6,7 @@
 
 [Telegram-bot](https://t.me/kandinsky21_bot)
 
-<p align="center">
+<p align="left">
 <img src="./content/kand_22.png" width="50%">
 </p>
 
@@ -31,7 +31,7 @@ The addition of the ControlNet mechanism allows the model to effectively control
 
 ## Model architecture:
 
-<p align="center">
+<p align="left">
 <img src="./content/kandinsky21.png" width="80%">
 </p>
 
