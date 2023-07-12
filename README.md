@@ -1,3 +1,27 @@
+# Kandinsky 2.2
+[![Framework: PyTorch](https://img.shields.io/badge/Framework-PyTorch-orange.svg)](https://pytorch.org/)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1MfN9dfmejT8NjXhR353NeP5RzbruHgo7?usp=sharing)
+
+[Habr post](https://habr.com/ru/companies/sberbank/articles/747446/)
+
+[Demo fusionbrain.ai](https://fusionbrain.ai/diffusion)
+
+[Telegram-bot](https://t.me/kandinsky21_bot)
+
+Kandinsky 2.2 LORA
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1lUWfe4CWhPJhUZYjMAE7g4ciHX4764rN?usp=sharing)
+
+<p align="left">
+<img src="./content/kand_22.png" width="60%">
+</p>
+
+Kandinsky 2.2 brings substantial improvements upon its predecessor, Kandinsky 2.1, by introducing a new, more powerful image encoder - CLIP-ViT-G and the ControlNet support.
+
+The switch to CLIP-ViT-G as the image encoder significantly increases the model's capability to generate more aesthetic pictures and better understand text, thus enhancing the model's overall performance.
+
+The addition of the ControlNet mechanism allows the model to effectively control the process of generating images. This leads to more accurate and visually appealing outputs and opens new possibilities for text-guided image manipulation.
+
+
 # Kandinsky 2.1
 
 [![Framework: PyTorch](https://img.shields.io/badge/Framework-PyTorch-orange.svg)](https://pytorch.org/) [![Huggingface space](https://img.shields.io/badge/🤗-Huggingface-yello.svg)](https://huggingface.co/sberbank-ai/Kandinsky_2.1)
@@ -13,9 +37,12 @@
 
 ## Model architecture:
 
-![](./content/kandinsky21.png)
+<p align="left">
+<img src="./content/kandinsky21.png" width="80%">
+</p>
 
-Kandinsky 2.1 inherits best practicies from Dall-E 2 and Latent diffucion, while introducing some new ideas.
+
+Kandinsky 2.1 inherits best practicies from Dall-E 2 and Latent diffusion, while introducing some new ideas.
 
 As text and image encoder it uses CLIP model and diffusion image prior (mapping) between latent spaces of CLIP modalities. This approach increases the visual performance of the model and unveils new horizons in blending images and text-guided image manipulation.
 

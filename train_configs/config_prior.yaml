@@ -1,0 +1,52 @@
+params_path:
+clip_mean_std_path:
+clip_name: ViT-L/14
+num_epochs: 2
+save_every: 1000
+save_name: model
+save_path: test
+inpainting: false
+device: cuda
+
+model_config:
+    model:
+      type: prior
+      diffusion_sampler: uniform
+      hparams:
+        text_ctx: 77
+        xf_width: 2048
+        xf_layers: 20
+        xf_heads: 32
+        xf_final_ln: true
+        xf_padding: false
+        text_drop: 0.2
+        clip_dim: 768
+        clip_xf_width: 768
+
+    diffusion:
+      steps: 1000
+      learn_sigma: false
+      sigma_small: true
+      noise_schedule: cosine
+      use_kl: false
+      predict_xstart: true
+      rescale_learned_sigmas: false
+      timestep_respacing: ''
+
+  
+optim_params:
+    name: transformers.Adafactor
+    params:
+      lr: 0.000005
+      weight_decay: 0
+      scale_parameter: false
+      relative_step: false
+        
+data:
+  train:
+    df_path: 
+    clip_image_size: 224
+    drop_text_prob: 0.1
+    batch_size: 1
+    shuffle: true
+    num_workers: 4

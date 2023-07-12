@@ -1,0 +1,101 @@
+params_path:
+drop_first_layer: false
+clip_name: ViT-L/14
+num_epochs: 2
+save_every: 1000
+save_name: model
+save_path: test
+inpainting: false
+device: cuda
+freeze:
+  freeze_resblocks: true
+  freeze_attention: false
+model_config:
+  version: '2.1'
+  image_size: 64
+  num_channels: 384
+  num_res_blocks: 3
+  channel_mult: ''
+  num_heads: 1
+  num_head_channels: 64
+  num_heads_upsample: -1
+  attention_resolutions: 32,16,8
+  dropout: 0
+  model_dim: 768
+  use_scale_shift_norm: true
+  resblock_updown: true
+  use_fp16: false
+  cache_text_emb: false
+  text_encoder_in_dim1: 1024
+  text_encoder_in_dim2: 768
+  image_encoder_in_dim: 768
+  num_image_embs: 10
+  pooling_type: from_model
+  in_channels: 4
+  out_channels: 8
+  inpainting: false
+  up: false
+
+  
+diffusion_config:
+  learn_sigma: true
+  sigma_small: false
+  steps: 1000
+  noise_schedule: linear
+  timestep_respacing: ''
+  use_kl: false
+  predict_xstart: false
+  rescale_timesteps: true
+  rescale_learned_sigmas: true
+  linear_start: 0.00085
+  linear_end: 0.012
+
+optim_params:
+    name: transformers.Adafactor
+    params:
+      lr: 0.000005
+      weight_decay: 0
+      scale_parameter: false
+      relative_step: false
+image_enc_params:
+    name: MOVQ
+    scale: 1
+    ckpt_path:
+    params:
+        embed_dim: 4
+        n_embed: 16384
+        ddconfig:
+          double_z: false
+          z_channels: 4
+          resolution: 256
+          in_channels: 3
+          out_ch: 3
+          ch: 128
+          ch_mult:
+          - 1
+          - 2
+          - 2
+          - 4
+          num_res_blocks: 2
+          attn_resolutions:
+          - 32
+          dropout: 0.0
+
+text_enc_params:
+    model_path: 
+    model_name: multiclip
+    in_features: 1024
+    out_features: 768
+        
+data:
+  train:
+    df_path: 
+    image_size: 768
+    tokenizer_name:
+    clip_image_size: 224
+    drop_text_prob: 0.5
+    drop_image_prob: 0.1
+    seq_len: 77
+    batch_size: 1
+    shuffle: true
+    num_workers: 4
