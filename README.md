@@ -1,6 +1,5 @@
 # Kandinsky 2.2
 [![Framework: PyTorch](https://img.shields.io/badge/Framework-PyTorch-orange.svg)](https://pytorch.org/)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1MfN9dfmejT8NjXhR353NeP5RzbruHgo7?usp=sharing)
 
 [Habr post](https://habr.com/ru/companies/sberbank/articles/747446/)
 
@@ -9,6 +8,7 @@
 [Telegram-bot](https://t.me/kandinsky21_bot)
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1lUWfe4CWhPJhUZYjMAE7g4ciHX4764rN?usp=sharing) — Fine-tuning with LoRA
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1MfN9dfmejT8NjXhR353NeP5RzbruHgo7?usp=sharing) — Inference example
 
 
 <p align="left">
@@ -32,6 +32,13 @@ The addition of the ControlNet mechanism allows the model to effectively control
 + CLIP image encoder (ViT-bigG-14-laion2B-39B-b160k) - 1.8B
 + Latent Diffusion U-Net - 1.22B
 + MoVQ encoder/decoder - 67M
+
+**Сheckpoints:**
+
++ [Prior](https://huggingface.co/kandinsky-community/kandinsky-2-2-prior): A prior diffusion model mapping text embeddings to image embeddings
++ [Text-to-Image / Image-to-Image](https://huggingface.co/kandinsky-community/kandinsky-2-2-decoder): A decoding diffusion model mapping image embeddings to images
++ [Inpainting](https://huggingface.co/kandinsky-community/kandinsky-2-2-decoder-inpaint): A decoding diffusion model mapping image embeddings and masked images to images
++ [СontrolТet-depth](https://huggingface.co/kandinsky-community/kandinsky-2-2-controlnet-depth): A decoding diffusion model mapping image embedding and additional depth condition to images
 
 
 # Kandinsky 2.1
