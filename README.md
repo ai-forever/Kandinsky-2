@@ -4,11 +4,7 @@
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1lUWfe4CWhPJhUZYjMAE7g4ciHX4764rN?usp=sharing) — Fine-tuning with LoRA
 
-[Habr post](https://habr.com/ru/companies/sberbank/articles/747446/)
-
-[Demo fusionbrain.ai](https://fusionbrain.ai/diffusion)
-
-[Telegram-bot](https://t.me/kandinsky21_bot)
+[Habr post](https://habr.com/ru/companies/sberbank/articles/747446/), [Demo fusionbrain.ai](https://fusionbrain.ai/diffusion), [Telegram-bot](https://t.me/kandinsky21_bot)
 
 <p align="left">
 <img src="./content/kand_22.png" width="60%">
