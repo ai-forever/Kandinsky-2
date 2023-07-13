@@ -10,8 +10,6 @@
 
 [Telegram-bot](https://t.me/kandinsky21_bot)
 
-
-
 <p align="left">
 <img src="./content/kand_22.png" width="60%">
 </p>
@@ -21,12 +19,6 @@ Kandinsky 2.2 brings substantial improvements upon its predecessor, Kandinsky 2.
 The switch to CLIP-ViT-G as the image encoder significantly increases the model's capability to generate more aesthetic pictures and better understand text, thus enhancing the model's overall performance.
 
 The addition of the ControlNet mechanism allows the model to effectively control the process of generating images. This leads to more accurate and visually appealing outputs and opens new possibilities for text-guided image manipulation.
-
-**Inference regimes:**
-
-<p align="left">
-<img src="./content/kand_22_setting.png" width="60%">
-</p>
 
 **Architecture details:**
 
@@ -42,6 +34,12 @@ The addition of the ControlNet mechanism allows the model to effectively control
 + [Text-to-Image / Image-to-Image](https://huggingface.co/kandinsky-community/kandinsky-2-2-decoder): A decoding diffusion model mapping image embeddings to images
 + [Inpainting](https://huggingface.co/kandinsky-community/kandinsky-2-2-decoder-inpaint): A decoding diffusion model mapping image embeddings and masked images to images
 + [СontrolТet-depth](https://huggingface.co/kandinsky-community/kandinsky-2-2-controlnet-depth): A decoding diffusion model mapping image embedding and additional depth condition to images
+
+### How to useInference regimes
+
+<p align="left">
+<img src="./content/kand_22_setting.png" width="60%">
+</p>
 
 ### How to use
 
