@@ -28,7 +28,7 @@ class Kandinsky2_2:
             self.prior = self.prior.to(self.device)
             self.decoder = KandinskyV22Pipeline.from_pretrained('kandinsky-community/kandinsky-2-2-decoder', unet=self.unet, torch_dtype=torch.float16)
             self.decoder = self.decoder.to(self.device)
-        if task_type == "img2img":
+        elif task_type == "img2img":
             self.unet = UNet2DConditionModel.from_pretrained('kandinsky-community/kandinsky-2-2-decoder', subfolder='unet').to(torch.float16).to(self.device)
             self.prior = KandinskyV22PriorPipeline.from_pretrained('kandinsky-community/kandinsky-2-2-prior', image_encoder=self.image_encoder, torch_dtype=torch.float16)
             self.prior = self.prior.to(self.device)
