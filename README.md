@@ -22,6 +22,8 @@ The switch to CLIP-ViT-G as the image encoder significantly increases the model'
 
 The addition of the ControlNet mechanism allows the model to effectively control the process of generating images. This leads to more accurate and visually appealing outputs and opens new possibilities for text-guided image manipulation.
 
+**Inference regimes:**
+
 <p align="left">
 <img src="./content/kand_22_setting.png" width="60%">
 </p>
@@ -40,6 +42,57 @@ The addition of the ControlNet mechanism allows the model to effectively control
 + [Text-to-Image / Image-to-Image](https://huggingface.co/kandinsky-community/kandinsky-2-2-decoder): A decoding diffusion model mapping image embeddings to images
 + [Inpainting](https://huggingface.co/kandinsky-community/kandinsky-2-2-decoder-inpaint): A decoding diffusion model mapping image embeddings and masked images to images
 + [СontrolТet-depth](https://huggingface.co/kandinsky-community/kandinsky-2-2-controlnet-depth): A decoding diffusion model mapping image embedding and additional depth condition to images
+
+### How to use
+
+```python
+import torch
+from transformers import CLIPVisionModelWithProjection
+from diffusers import KandinskyV22Pipeline, KandinskyV22PriorPipeline
+from diffusers.models import UNet2DConditionModel
+
+DEVICE = torch.device('cuda')
+image_encoder = CLIPVisionModelWithProjection.from_pretrained(
+    'kandinsky-community/kandinsky-2-2-prior',
+    subfolder='image_encoder'
+).half().to(DEVICE)
+
+unet = UNet2DConditionModel.from_pretrained(
+    'kandinsky-community/kandinsky-2-2-decoder', 
+    subfolder='unet'
+).half().to(DEVICE)
+
+prior = KandinskyV22PriorPipeline.from_pretrained(
+    'kandinsky-community/kandinsky-2-2-prior',
+    image_encoder=image_encoder, 
+    torch_dtype=torch.float16
+).to(DEVICE)
+
+decoder = KandinskyV22Pipeline.from_pretrained(
+    'kandinsky-community/kandinsky-2-2-decoder',
+    unet=unet, 
+    torch_dtype=torch.float16
+).to(DEVICE)
+
+negative_prior_prompt ='bad quality'
+img_emb = prior(
+    prompt='A red cat',
+    num_inference_steps=2, 
+    num_images_per_prompt=1
+)
+
+negative_emb = prior(
+    prompt=negative_prior_prompt,
+    num_inference_steps=2,
+    num_images_per_prompt=1
+)
+
+images = decoder(image_embeds=img_emb.image_embeds, 
+                 negative_image_embeds=negative_emb.image_embeds, 
+                 num_inference_steps=100, 
+                 height=512, 
+                 width=512)
+```
 
 
 # Kandinsky 2.1
