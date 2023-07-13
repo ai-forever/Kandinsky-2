@@ -8,8 +8,8 @@
 
 [Telegram-bot](https://t.me/kandinsky21_bot)
 
-Kandinsky 2.2 LORA
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1lUWfe4CWhPJhUZYjMAE7g4ciHX4764rN?usp=sharing)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1lUWfe4CWhPJhUZYjMAE7g4ciHX4764rN?usp=sharing) — Fine-tuning with LoRA
+
 
 <p align="left">
 <img src="./content/kand_22.png" width="60%">
@@ -20,6 +20,18 @@ Kandinsky 2.2 brings substantial improvements upon its predecessor, Kandinsky 2.
 The switch to CLIP-ViT-G as the image encoder significantly increases the model's capability to generate more aesthetic pictures and better understand text, thus enhancing the model's overall performance.
 
 The addition of the ControlNet mechanism allows the model to effectively control the process of generating images. This leads to more accurate and visually appealing outputs and opens new possibilities for text-guided image manipulation.
+
+<p align="left">
+<img src="./content/kand_22_setting.png" width="60%">
+</p>
+
+**Architecture details:**
+
++ Text encoder (XLM-Roberta-Large-Vit-L-14) - 560M
++ Diffusion Image Prior — 1B
++ CLIP image encoder (ViT-bigG-14-laion2B-39B-b160k) - 1.8B
++ Latent Diffusion U-Net - 1.22B
++ MoVQ encoder/decoder - 67M
 
 
 # Kandinsky 2.1
