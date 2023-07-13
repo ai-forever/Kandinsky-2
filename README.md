@@ -43,6 +43,8 @@ The addition of the ControlNet mechanism allows the model to effectively control
 
 ### How to use
 
+`pip install git+https://github.com/ai-forever/diffusers.git`
+
 ```python
 import torch
 from transformers import CLIPVisionModelWithProjection
