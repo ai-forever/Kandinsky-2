@@ -6,6 +6,7 @@ from omegaconf.dictconfig import DictConfig
 from .configs import CONFIG_2_0, CONFIG_2_1
 from .kandinsky2_model import Kandinsky2
 from .kandinsky2_1_model import Kandinsky2_1
+from .kandinsky2_2_model import Kandinsky2_2
 
 
 def get_kandinsky2_0(
@@ -183,6 +184,8 @@ def get_kandinsky2(
             use_auth_token=use_auth_token,
             use_flash_attention=use_flash_attention,
         )
+    elif model_version == "2.2":
+        model = Kandinsky2_2(device=device, task_type=task_type)
     else:
         raise ValueError("Only 2.0 and 2.1 is available")
     
