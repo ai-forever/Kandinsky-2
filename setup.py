@@ -24,6 +24,8 @@ setup(
         "pytorch_lightning",
         "einops",
         "sentencepiece",
+        "diffusers",
+        "accelerate"
   
     ],
     author="",
