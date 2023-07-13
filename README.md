@@ -4,7 +4,9 @@
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1lUWfe4CWhPJhUZYjMAE7g4ciHX4764rN?usp=sharing) — Fine-tuning with LoRA
 
-[Habr post](https://habr.com/ru/companies/sberbank/articles/747446/), [Demo fusionbrain.ai](https://fusionbrain.ai/diffusion), [Telegram-bot](https://t.me/kandinsky21_bot)
++ [Habr post](https://habr.com/ru/companies/sberbank/articles/747446/)
++ [Demo fusionbrain.ai](https://fusionbrain.ai/diffusion)
++ [Telegram-bot](https://t.me/kandinsky21_bot)
 
 <p align="left">
 <img src="./content/kand_22.png" width="60%">
@@ -29,9 +31,9 @@ The addition of the ControlNet mechanism allows the model to effectively control
 + [Prior](https://huggingface.co/kandinsky-community/kandinsky-2-2-prior): A prior diffusion model mapping text embeddings to image embeddings
 + [Text-to-Image / Image-to-Image](https://huggingface.co/kandinsky-community/kandinsky-2-2-decoder): A decoding diffusion model mapping image embeddings to images
 + [Inpainting](https://huggingface.co/kandinsky-community/kandinsky-2-2-decoder-inpaint): A decoding diffusion model mapping image embeddings and masked images to images
-+ [СontrolТet-depth](https://huggingface.co/kandinsky-community/kandinsky-2-2-controlnet-depth): A decoding diffusion model mapping image embedding and additional depth condition to images
++ [ControlNet-depth](https://huggingface.co/kandinsky-community/kandinsky-2-2-controlnet-depth): A decoding diffusion model mapping image embedding and additional depth condition to images
 
-### How to useInference regimes
+### Inference regimes
 
 <p align="left">
 <img src="./content/kand_22_setting.png" width="60%">
