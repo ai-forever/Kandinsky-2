@@ -1,5 +1,8 @@
 # Kandinsky 2.2
-[![Framework: PyTorch](https://img.shields.io/badge/Framework-PyTorch-orange.svg)](https://pytorch.org/)
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1MfN9dfmejT8NjXhR353NeP5RzbruHgo7?usp=sharing) — Inference example
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1lUWfe4CWhPJhUZYjMAE7g4ciHX4764rN?usp=sharing) — Fine-tuning with LoRA
 
 [Habr post](https://habr.com/ru/companies/sberbank/articles/747446/)
 
@@ -7,9 +10,6 @@
 
 [Telegram-bot](https://t.me/kandinsky21_bot)
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1lUWfe4CWhPJhUZYjMAE7g4ciHX4764rN?usp=sharing) — Fine-tuning with LoRA
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1MfN9dfmejT8NjXhR353NeP5RzbruHgo7?usp=sharing) — Inference example
 
 
 <p align="left">
