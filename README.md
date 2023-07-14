@@ -41,8 +41,9 @@ The addition of the ControlNet mechanism allows the model to effectively control
 <img src="./content/kand_22_setting.png" width="60%">
 </p>
 
-### How to use
+## How to use:
 
+Check our jupyter notebooks with examples in `./notebooks` folder
 ### 1. text2image
 
 ```python
