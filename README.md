@@ -43,55 +43,17 @@ The addition of the ControlNet mechanism allows the model to effectively control
 
 ### How to use
 
-`pip install git+https://github.com/ai-forever/diffusers.git`
-
+T
 ```python
-import torch
-from transformers import CLIPVisionModelWithProjection
-from diffusers import KandinskyV22Pipeline, KandinskyV22PriorPipeline
-from diffusers.models import UNet2DConditionModel
-
-DEVICE = torch.device('cuda')
-image_encoder = CLIPVisionModelWithProjection.from_pretrained(
-    'kandinsky-community/kandinsky-2-2-prior',
-    subfolder='image_encoder'
-).half().to(DEVICE)
-
-unet = UNet2DConditionModel.from_pretrained(
-    'kandinsky-community/kandinsky-2-2-decoder', 
-    subfolder='unet'
-).half().to(DEVICE)
-
-prior = KandinskyV22PriorPipeline.from_pretrained(
-    'kandinsky-community/kandinsky-2-2-prior',
-    image_encoder=image_encoder, 
-    torch_dtype=torch.float16
-).to(DEVICE)
-
-decoder = KandinskyV22Pipeline.from_pretrained(
-    'kandinsky-community/kandinsky-2-2-decoder',
-    unet=unet, 
-    torch_dtype=torch.float16
-).to(DEVICE)
-
-negative_prior_prompt ='bad quality'
-img_emb = prior(
-    prompt='A red cat',
-    num_inference_steps=2, 
-    num_images_per_prompt=1
+from kandinsky2 import get_kandinsky2
+model = get_kandinsky2('cuda', task_type='text2img', model_version='2.2')
+images = model.generate_text2img(
+    "red cat, 4k photo", 
+    decoder_steps=50,
+    batch_size=1, 
+    h=1024,
+    w=768,
 )
-
-negative_emb = prior(
-    prompt=negative_prior_prompt,
-    num_inference_steps=2,
-    num_images_per_prompt=1
-)
-
-images = decoder(image_embeds=img_emb.image_embeds, 
-                 negative_image_embeds=negative_emb.image_embeds, 
-                 num_inference_steps=100, 
-                 height=512, 
-                 width=512)
 ```
 
 
