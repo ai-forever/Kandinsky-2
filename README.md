@@ -43,7 +43,8 @@ The addition of the ControlNet mechanism allows the model to effectively control
 
 ### How to use
 
-T
+### 1. text2image
+
 ```python
 from kandinsky2 import get_kandinsky2
 model = get_kandinsky2('cuda', task_type='text2img', model_version='2.2')
