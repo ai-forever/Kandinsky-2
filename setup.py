@@ -18,12 +18,14 @@ setup(
         "regex",
         "numpy",
         "blobfile",
-        "transformers==4.23.1",
+        "transformers",
         "torchvision",
         "omegaconf",
         "pytorch_lightning",
         "einops",
         "sentencepiece",
+        "diffusers",
+        "accelerate"
   
     ],
     author="",
