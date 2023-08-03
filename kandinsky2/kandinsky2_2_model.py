@@ -69,7 +69,7 @@ class Kandinsky2_2:
         img_emb = self.prior(prompt=prompt, num_inference_steps=prior_steps,
                         num_images_per_prompt=batch_size, guidance_scale=prior_guidance_scale,
                         negative_prompt=negative_prior_prompt)
-        negative_emb = self.prior(prompt=negative_prior_prompt, num_inference_steps=prior_steps,
+        negative_emb = self.prior(prompt=negative_decoder_prompt, num_inference_steps=prior_steps,
                              num_images_per_prompt=batch_size, guidance_scale=prior_guidance_scale)
         if negative_decoder_prompt == "":
             negative_emb = negative_emb.negative_image_embeds
