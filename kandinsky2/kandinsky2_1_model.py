@@ -54,7 +54,7 @@ class Kandinsky2_1:
             clip_mean,
             clip_std,
         )
-        self.prior.load_state_dict(torch.load(prior_path), strict=False)
+        self.prior.load_state_dict(torch.load(prior_path, map_location='cpu'), strict=False)
         if self.use_fp16:
             self.prior = self.prior.half()
         self.text_encoder = TextEncoder(**self.config["text_enc_params"])
@@ -80,7 +80,7 @@ class Kandinsky2_1:
             elif self.config["image_enc_params"]["name"] == "MOVQ":
                 self.image_encoder = MOVQ(**self.config["image_enc_params"]["params"])
                 self.image_encoder.load_state_dict(
-                    torch.load(self.config["image_enc_params"]["ckpt_path"])
+                    torch.load(self.config["image_enc_params"]["ckpt_path"], map_location='cpu')
                 )
             self.image_encoder.eval()
         else:
@@ -88,7 +88,7 @@ class Kandinsky2_1:
             
         self.config["model_config"]["cache_text_emb"] = True
         self.model = create_model(**self.config["model_config"])
-        self.model.load_state_dict(torch.load(model_path))
+        self.model.load_state_dict(torch.load(model_path, map_location='cpu'))
         if self.use_fp16:
             self.model.convert_to_fp16()
             self.image_encoder = self.image_encoder.half()
