@@ -69,6 +69,8 @@ images = model.generate_text2img(
 
 [Demo](https://fusionbrain.ai/diffusion)
 
+[Windows Install & Use Tutorial](https://youtu.be/dYt9xJ7dnpU)
+
 `pip install "git+https://github.com/ai-forever/Kandinsky-2.git"`
 
 ## Model architecture:
