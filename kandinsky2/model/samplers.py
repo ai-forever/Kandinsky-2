@@ -66,17 +66,18 @@ def extract_into_tensor(a, t, x_shape):
 
 
 class DDIMSampler(object):
-    def __init__(self, model, old_diffusion, schedule="linear", **kwargs):
+    def __init__(self, model, old_diffusion, schedule="linear", device="cuda", **kwargs):
         super().__init__()
         self.model = model
         self.old_diffusion = old_diffusion
         self.ddpm_num_timesteps = 1000
         self.schedule = schedule
+        self.device = device
 
     def register_buffer(self, name, attr):
         if type(attr) == torch.Tensor:
-            if attr.device != torch.device("cuda"):
-                attr = attr.to(torch.device("cuda"))
+            if attr.device != torch.device(self.device):
+                attr = attr.to(dtype=torch.float32).to(torch.device(self.device))
         setattr(self, name, attr)
 
     def make_schedule(
@@ -98,7 +99,7 @@ class DDIMSampler(object):
         assert (
             alphas_cumprod.shape[0] == self.ddpm_num_timesteps
         ), "alphas have to be defined for each timestep"
-        to_torch = lambda x: x.clone().detach().to(torch.float32).to("cuda")
+        to_torch = lambda x: x.clone().detach().to(torch.float32).to(self.device)
 
         self.register_buffer(
             "betas", to_torch(torch.from_numpy(self.old_diffusion.betas))
@@ -223,10 +224,9 @@ class DDIMSampler(object):
         unconditional_guidance_scale=1.0,
         unconditional_conditioning=None,
     ):
-        device = "cuda"
         b = shape[0]
         if x_T is None:
-            img = torch.randn(shape, device=device)
+            img = torch.randn(shape, device=self.device)
         else:
             img = x_T
 
@@ -258,7 +258,7 @@ class DDIMSampler(object):
 
         for i, step in enumerate(iterator):
             index = total_steps - i - 1
-            ts = torch.full((b,), step, device=device, dtype=torch.long)
+            ts = torch.full((b,), step, device=self.device, dtype=torch.long)
 
             outs = self.p_sample_ddim(
                 img,
@@ -332,17 +332,18 @@ class DDIMSampler(object):
 
 
 class PLMSSampler(object):
-    def __init__(self, model, old_diffusion, schedule="linear", **kwargs):
+    def __init__(self, model, old_diffusion, schedule="linear", device="cuda", **kwargs):
         super().__init__()
         self.model = model
         self.old_diffusion = old_diffusion
         self.ddpm_num_timesteps = 1000
         self.schedule = schedule
+        self.device = device
 
     def register_buffer(self, name, attr):
         if type(attr) == torch.Tensor:
-            if attr.device != torch.device("cuda"):
-                attr = attr.to(torch.device("cuda"))
+            if attr.device != torch.device(self.device):
+                attr = attr.to(dtype=torch.float32).to(torch.device(self.device))
         setattr(self, name, attr)
 
     def make_schedule(
@@ -366,7 +367,7 @@ class PLMSSampler(object):
         assert (
             alphas_cumprod.shape[0] == self.ddpm_num_timesteps
         ), "alphas have to be defined for each timestep"
-        to_torch = lambda x: x.clone().detach().to(torch.float32).to("cuda")
+        to_torch = lambda x: x.clone().detach().to(torch.float32).to(self.device)
 
         self.register_buffer(
             "betas", to_torch(torch.from_numpy(self.old_diffusion.betas))
@@ -492,10 +493,9 @@ class PLMSSampler(object):
         unconditional_guidance_scale=1.0,
         unconditional_conditioning=None,
     ):
-        device = "cuda"
         b = shape[0]
         if x_T is None:
-            img = torch.randn(shape, device=device)
+            img = torch.randn(shape, device=self.device)
         else:
             img = x_T
 
@@ -529,11 +529,11 @@ class PLMSSampler(object):
 
         for i, step in enumerate(iterator):
             index = total_steps - i - 1
-            ts = torch.full((b,), step, device=device, dtype=torch.long)
+            ts = torch.full((b,), step, device=self.device, dtype=torch.long)
             ts_next = torch.full(
                 (b,),
                 time_range[min(i + 1, len(time_range) - 1)],
-                device=device,
+                device=self.device,
                 dtype=torch.long,
             )
 

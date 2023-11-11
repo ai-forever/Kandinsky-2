@@ -30,6 +30,8 @@ class Kandinsky2_1:
     ):
         self.config = config
         self.device = device
+        if device != "cuda":
+            self.config["model_config"]["use_fp16"] = False
         self.use_fp16 = self.config["model_config"]["use_fp16"]
         self.task_type = task_type
         self.clip_image_size = config["clip_image_size"]
@@ -261,12 +263,14 @@ class Kandinsky2_1:
                     model=model_fn,
                     old_diffusion=diffusion,
                     schedule="linear",
+                    device=self.device,
                 )
             elif sampler == "plms_sampler":
                 sampler = PLMSSampler(
                     model=model_fn,
                     old_diffusion=diffusion,
                     schedule="linear",
+                    device=self.device,
                 )
             else:
                 raise ValueError("Only ddim_sampler and plms_sampler is available")
